@@ -1,0 +1,7 @@
+{:site-name      "My Blog"
+ :site-lead      "Thoughts, tutorials, and insights on technology and development"
+ :site-about     "A modern blog built with Clojure, AsciiDoc, and Bootstrap 5."
+ :copyright-date "2025"
+ :contact-email  "email@example.com"
+ :links          [{:link-name "GitHub" :link-url "https://github.com"}
+                  {:link-name "Twitter" :link-url "https://twitter.com"}]}

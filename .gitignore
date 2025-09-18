@@ -1,0 +1,207 @@
+# Project-specific exclusions
+# =====================================
+
+# Clojure/Babashka
+# =====================================
+
+# Clojure compilation and caches
+.cpcache/
+.clojure/
+.clojure-cache/
+classes/
+checkouts/
+target/
+
+# nREPL
+.nrepl-port
+.nrepl-history
+.lein-repl-history
+.rebel_readline_history
+
+# Leiningen (if ever used)
+.lein-deps-sum
+.lein-failures
+.lein-plugins/
+.lein-env
+
+# Babashka
+.bb-cache/
+.babashka/
+
+# Clojure LSP
+.lsp/
+.clj-kondo/
+
+# IDE and Editor files
+# =====================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Emacs
+*~
+\#*\#
+.\#*
+.emacs.desktop
+.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.cask/
+dist/
+flycheck_*.el
+.projectile
+.dir-locals.el
+
+# Vim
+*.swp
+*.swo
+*.swn
+.*.swp
+.*.swo
+.*.swn
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+Session.vim
+.netrwhist
+tags
+.vim/
+
+# Operating System files
+# =====================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Logs and temporary files
+# =====================================
+*.log
+*.pid
+*.seed
+*.pid.lock
+logs/
+pids/
+tmp/
+temp/
+
+# Build artifacts (general)
+# =====================================
+build/
+dist/
+*.jar
+*.war
+*.ear
+*.class
+
+# Testing
+# =====================================
+.nyc_output/
+coverage/
+*.lcov
+.coverage
+htmlcov/
+junit.xml
+test-results/
+
+# Environment and secrets
+# =====================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+secrets/
+
+# Documentation builds (if using tools)
+# =====================================
+docs/_build/
+site/
+
+# Node.js (if ever needed for tooling)
+# =====================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Python (if ever needed for tooling)
+# =====================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv
+
+# Archives and backups
+# =====================================
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+
+# Development notes (optional - uncomment if needed)
+# =====================================
+# TODO.md
+# NOTES.md
+# scratch/
+# experiments/

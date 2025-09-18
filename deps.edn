@@ -1,0 +1,20 @@
+{:paths       ["src" "resources"]
+ :deps        {org.clojure/clojure              {:mvn/version "1.12.1"}
+               org.asciidoctor/asciidoctorj     {:mvn/version "3.0.0"}
+               hiccup/hiccup                    {:mvn/version "2.0.0"}
+               io.github.clojure/tools.build    {:mvn/version "0.10.10"}
+               org.openjdk.nashorn/nashorn-core {:mvn/version "15.7"}
+               org.clojure/tools.cli            {:mvn/version "1.1.230"}
+               dev.weavejester/hashp            {:mvn/version "0.4.0"}
+               }
+ ;; Default namespace for tool usage
+ :tools/usage {
+               :ns-default lambda-lifters.ascii-blog.tool
+               }
+
+ :aliases
+ {;; Run with clj -T:build function-in-build
+  :build {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.10"}}
+          :ns-default build}}
+
+ }

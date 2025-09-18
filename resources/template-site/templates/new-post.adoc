@@ -1,0 +1,23 @@
+= {{title}}
+:author: {{author}}
+:date: {{date}}
+:description: {{description}}
+:tags: {{tags}}
+
+== Introduction
+
+Start writing your post here...
+
+== Main Content
+
+Add your main content here.
+
+[source,clojure]
+----
+(defn example []
+  (println "Hello, World!"))
+----
+
+== Conclusion
+
+Wrap up your thoughts here.

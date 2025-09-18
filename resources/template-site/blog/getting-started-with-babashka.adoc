@@ -1,0 +1,57 @@
+= Getting Started with Babashka
+:author: Tech Writer
+:date: 2024-01-15
+:description: Learn how to use Babashka for fast Clojure scripting and task automation
+:tags: clojure, babashka, scripting
+
+== Introduction
+
+https://babashka.org[Babashka] is a fast-starting scripting environment for Clojure that makes it perfect for command-line tools and build scripts. Unlike traditional Clojure which runs on the JVM, Babashka uses GraalVM native-image to provide instant startup times.
+
+== Why Babashka?
+
+Traditional Clojure scripts suffer from JVM startup time, which can be several seconds. This makes them impractical for command-line tools and build scripts. Babashka solves this problem by providing:
+
+* **Instant startup** - Scripts start in milliseconds, not seconds
+* **Familiar Clojure** - Most of the Clojure standard library is available
+* **Great for scripting** - Built-in libraries for common tasks
+* **Task runner** - Built-in task runner similar to Make or npm scripts
+
+== Installation
+
+Installing Babashka is straightforward on most platforms:
+
+[source,bash]
+----
+# macOS/Linux
+curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+chmod +x install
+./install
+
+# Or with Homebrew
+brew install borkdude/brew/babashka
+----
+
+== Your First Script
+
+Here's a simple Babashka script that processes files:
+
+[source,clojure]
+----
+#!/usr/bin/env bb
+
+(require '[babashka.fs :as fs])
+
+(defn process-files [dir]
+  (let [files (fs/list-dir dir)]
+    (doseq [file files]
+      (println "Found:" (str file)))))
+
+(process-files ".")
+----
+
+Save this to a file, make it executable with `chmod +x`, and run it directly!
+
+== Conclusion
+
+Babashka brings the joy of Clojure to command-line scripting. With instant startup times and a rich set of built-in libraries, it's perfect for build scripts, automation, and command-line tools.
