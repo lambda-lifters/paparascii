@@ -7,7 +7,7 @@
 (defn get-site-dir
   "Get the site directory from environment or current directory"
   []
-  (or (System/getenv "SPIFFING_SITE_DIR") "."))
+  (or (System/getenv "ASCII_SITE_DIR") "."))
 
 (defn serve-file
   "Serve a static file"

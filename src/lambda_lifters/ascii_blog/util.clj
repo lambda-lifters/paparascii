@@ -1,5 +1,8 @@
 (ns lambda-lifters.ascii-blog.util
-  (:require [lambda-lifters.ascii-blog.log :as log]
+  (:require [clojure.data.json :as json]
+            [clojure.walk :as walk]
+            [hiccup2.core :as h]
+            [lambda-lifters.ascii-blog.log :as log]
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.string :as str])
@@ -18,15 +21,17 @@
 (defn copy-file
   "Copy a file from source to destination"
   [src dest]
-  (io/make-parents dest)
-  (io/copy (io/file src)
-           (io/file dest))
-  (log/success "  ✓ copied " (.toString dest)))
+  (log/log-action
+    (str "copy " src " → " (.toString dest))
+    (io/make-parents dest)
+    (io/copy (io/file src)
+             (io/file dest))))
 
 (defn ensure-directory [dir]
-  (io/make-parents (io/file dir "dummy"))
-  (.delete (io/file dir "dummy"))
-  (log/success "  ✓ Created " dir))
+  (log/log-action
+    (str "ensure directory " dir)
+    (io/make-parents (io/file dir "dummy"))
+    (.delete (io/file dir "dummy"))))
 
 (defn resource-path [rsrc]
   (Path/of (.toURI (io/resource rsrc))))
@@ -42,3 +47,17 @@
         username))
     (catch Exception _
       (System/getProperty "user.name" "Anonymous"))))
+
+(defn handle-config-markup-directives [s]
+  (walk/postwalk #(cond (not (vector? %)) %
+                        (= (first %) :->raw) (h/raw (apply str (rest %)))
+                        (= (first %) :->json) (json/write-str (second %))
+                        :else %)
+                 s))
+
+(comment
+  (h/html
+    (handle-config-markup-directives
+      [:->raw "var<&>="
+       [:->json {:site "http://timb.net&42"}]
+       ])))

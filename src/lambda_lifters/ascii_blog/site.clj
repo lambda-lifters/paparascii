@@ -54,7 +54,9 @@
   []
   (let [config-file (site-path "site-config.edn")]
     (try
-      (with-open [rdr (PushbackReader. (io/reader config-file))] (edn/read rdr))
+      (let [config (with-open [rdr (PushbackReader. (io/reader config-file))] (edn/read rdr))]
+        (when-not (map? config) (throw (ex-info "site-config.edn is not a map" {:parsed-config config})))
+        config)
       (catch Exception e
         (log/error (str "Error reading config file: " (.getMessage e)))
         (throw e)))))

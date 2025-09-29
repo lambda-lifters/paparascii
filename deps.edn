@@ -6,6 +6,8 @@
                org.openjdk.nashorn/nashorn-core {:mvn/version "15.7"}
                org.clojure/tools.cli            {:mvn/version "1.1.230"}
                dev.weavejester/hashp            {:mvn/version "0.4.0"}
+               lambda-lifters/lambda-liftoff    {:git/url "https://github.com/lambda-lifters/lambda-liftoff.git"
+                                                 :git/sha "0891fd89d84c2358f4689ddc1222072abde9016b"}
                }
  ;; Default namespace for tool usage
  :tools/usage {

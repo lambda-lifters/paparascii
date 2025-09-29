@@ -39,8 +39,9 @@
         (do
           (io/make-parents filename)
           (spit filename content)
-          (log/success "✅ Created new blog post: " filename)
-          (log/success "Next steps:")
-          (log/success "  1. Edit the file: " filename)
-          (log/success "  2. Build the site: clojure -T:build build")
-          (log/success "  3. Test locally: clojure -T:build serve"))))))
+          (log/success "
+          ✅ Created new blog post: " filename "
+          Next steps:
+            1. Edit the file: " filename "
+            2. Build the site: clojure -T:build build
+            3. Test locally: clojure -T:build serve"))))))
