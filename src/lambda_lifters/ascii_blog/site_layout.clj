@@ -51,7 +51,8 @@
       [:hr.bg-white-50]
       [:div.text-center.text-white-50
        [:p "©" copyright-date " " site-name ". All rights reserved."]
-       [:p "Built with: " [:a {:href "https://github.com/lambda-lifters/ascii-blog"} "The blog generator for AsciiDoc fans"]]]]]
+       [:p "Built with: " [:a {:href "https://github.com/lambda-lifters/ascii-blog"}
+                           [:b "ASCII Blog:"] " The blog generator for AsciiDoc fans"]]]]]
     [:script (assoc (:script bootstrap) :crossorigin "anonymous")]))
 
 (defn html-template
@@ -105,7 +106,9 @@
                          [:h2.mb-4 "Recent Posts"]
                          (if (empty? posts)
                            [:div.alert.alert-info "No blog posts yet. Add some .adoc files to the blog directory!"]
-                           (->> posts (sort-by (comp :date :meta)) reverse
+                           (->> posts
+                                (sort-by (comp :date :meta))
+                                reverse
                                 (map #(index-entry-for-post % (:meta %)))))]
                         [:div.col-lg-4
                          [:div.card

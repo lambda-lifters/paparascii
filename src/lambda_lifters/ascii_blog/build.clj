@@ -211,4 +211,13 @@
           1. Copy TARGET/public_html/* to your web server
           2. Ensure .htaccess is copied (it may be hidden)
         To test locally:
-          clojure -T:build serve")))))
+          clojure -Tascii-blog serve")))))
+
+(comment
+  ; Example REPL session if you need to debug a thing
+  (System/setProperty "SITE_DIR" "../timb.net-site")
+  (System/getProperty "SITE_DIR")
+  (swap! site/*site-dir site/resolve-site-dir)
+  @site/*site-dir
+  (build!)
+  )

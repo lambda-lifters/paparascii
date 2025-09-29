@@ -5,9 +5,14 @@
             [clojure.string :as str])
   (:import (java.io PushbackReader)))
 
+(defn resolve-site-dir [& _]
+  (or (System/getProperty "SITE_DIR")
+      (System/getenv "SITE_DIR")
+      "."))
+
 (def *site-dir
   "Get the site directory from environment or current directory"
-  (delay (or (System/getenv "SITE_DIR") ".")))
+  (atom (resolve-site-dir)))
 
 (defn site-file
   "Build a file relative to the site directory"
