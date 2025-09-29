@@ -219,5 +219,6 @@
   (System/getProperty "SITE_DIR")
   (swap! site/*site-dir site/resolve-site-dir)
   @site/*site-dir
+  @site/*site-config
   (build!)
   )

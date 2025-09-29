@@ -12,7 +12,7 @@
                 })
 
 (def navbar-sections [["/" "Home"]
-                      ["/blog" "Blog"]
+                      #_["/blog" "Blog"]
                       ["/about.html" "About"]
                       ["/contact.html" "Contact"]])
 
@@ -65,7 +65,8 @@
        (head title site-name description
              (concat additional-head
                      (u/handle-config-markup-directives
-                       (:additional-header-content site-config))))
+                       (:additional-header-content site-config)
+                       :title title)))
        [:body
         (list
           (navbar site-name)
@@ -149,7 +150,7 @@
     {:title           title
      :description     description
      :meta            meta
-     :additional-head (conj (u/handle-config-markup-directives post-additional-header-content) additional-css)
+     :additional-head (conj (u/handle-config-markup-directives post-additional-header-content :title title) additional-css)
      :content         [:div.container.mt-4
                        [:article.blog-post
                         [:h1 title]

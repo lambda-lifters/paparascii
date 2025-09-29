@@ -48,10 +48,11 @@
     (catch Exception _
       (System/getProperty "user.name" "Anonymous"))))
 
-(defn handle-config-markup-directives [s]
+(defn handle-config-markup-directives [s & {:keys [title]}]
   (walk/postwalk #(cond (not (vector? %)) %
                         (= (first %) :->raw) (h/raw (apply str (rest %)))
                         (= (first %) :->json) (json/write-str (second %))
+                        (= (first %) :->slug) (str (second %) (slugify title))
                         :else %)
                  s))
 
