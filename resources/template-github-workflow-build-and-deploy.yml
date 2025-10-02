@@ -1,0 +1,64 @@
+name: Build and Deploy
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@12.5
+        with:
+          cli: latest
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+          key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
+          restore-keys: ${{ runner.os }}-clojure-
+      
+      - name: Clone ascii-blog
+        run: git clone https://github.com/lambda-lifters/ascii-blog.git /tmp/ascii-blog
+      
+      - name: Install ascii-blog as tool
+        run: clojure -Ttools install-latest :as ascii-blog :local/root /tmp/ascii-blog
+      
+      - name: Build site
+        run: clojure -Tascii-blog build
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to remote server
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            target/ \
+            ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:~/
+      
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
