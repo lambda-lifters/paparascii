@@ -1,8 +1,8 @@
-(ns lambda-lifters.ascii-blog.init
+(ns lambda-lifters.paparascii.init
   (:require [clojure.pprint :as pp]
-            [lambda-lifters.ascii-blog.log :as log]
-            [lambda-lifters.ascii-blog.site :as site]
-            [lambda-lifters.ascii-blog.util :as u])
+            [lambda-lifters.paparascii.log :as log]
+            [lambda-lifters.paparascii.site :as site]
+            [lambda-lifters.paparascii.util :as u])
   (:import (java.nio.file Path)))
 
 (defn init!
@@ -19,7 +19,15 @@
                          {:link-name "Twitter" :link-url "https://twitter.com"}]}]
      (log/in-section
       "Create directories"
-      (doseq [dir ["blog" "site" "resources" "assets/css" "assets/js" "assets/img" "templates" ".github/workflows"]]
+      (doseq [dir ["blog"
+                   "site"
+                   "resources"
+                   "assets/css"
+                   "assets/js"
+                   "assets/img"
+                   "assets/media"
+                   "templates"
+                   ".github/workflows"]]
         (u/ensure-directory dir)))
      (log/in-section
       "Create site-config.edn"
@@ -40,5 +48,5 @@
      (log/success "
       Site initialized! Next steps:
         1. Edit site-config.edn to customize your site
-        2. Run: clojure -Tascii-blog build
-        3. Run: clojure -Tascii-blog serve"))))
+        2. Run: clojure -Tpaparascii build
+        3. Run: clojure -Tpaparascii serve"))))

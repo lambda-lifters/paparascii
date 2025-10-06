@@ -1,7 +1,7 @@
-(ns lambda-lifters.ascii-blog.site-layout
+(ns lambda-lifters.paparascii.site-layout
   (:require [clojure.string :as str]
             [hiccup2.core :as h]
-            [lambda-lifters.ascii-blog.util :as u]))
+            [lambda-lifters.paparascii.util :as u]))
 
 (def bootstrap {
                 :stylesheet {:href      "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -51,8 +51,8 @@
       [:hr.bg-white-50]
       [:div.text-center.text-white-50
        [:p "©" copyright-date " " site-name ". All rights reserved."]
-       [:p "Built with: " [:a {:href "https://github.com/lambda-lifters/ascii-blog"}
-                           [:b "ASCII Blog:"] " The blog generator for AsciiDoc fans"]]]]]
+       [:p "Built with: " [:a {:href "https://github.com/lambda-lifters/paparascii"}
+                           [:b "paparascii:"] " The blog generator for AsciiDoc fans"]]]]]
     [:script (assoc (:script bootstrap) :crossorigin "anonymous")]))
 
 (defn html-template

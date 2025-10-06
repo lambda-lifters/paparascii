@@ -1,4 +1,4 @@
-(ns lambda-lifters.ascii-blog.prism-js-highlighter
+(ns lambda-lifters.paparascii.prism-js-highlighter
   (:require [clojure.java.io :as io]
             [hashp.preload]
             [hiccup2.core :as h])

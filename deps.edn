@@ -11,7 +11,7 @@
                }
  ;; Default namespace for tool usage
  :tools/usage {
-               :ns-default lambda-lifters.ascii-blog.tool
+               :ns-default lambda-lifters.paparascii.tool
                }
 
  :aliases

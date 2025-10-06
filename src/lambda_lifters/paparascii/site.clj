@@ -1,5 +1,5 @@
-(ns lambda-lifters.ascii-blog.site
-  (:require [lambda-lifters.ascii-blog.log :as log]
+(ns lambda-lifters.paparascii.site
+  (:require [lambda-lifters.paparascii.log :as log]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str])
@@ -50,6 +50,7 @@
                    "public_html/css"
                    "public_html/js"
                    "public_html/img"
+                   "public_html/media"
                    "public_html/cgi-bin"
                    "bin"
                    "logs"})

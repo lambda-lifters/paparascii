@@ -1,8 +1,8 @@
-(ns lambda-lifters.ascii-blog.util
+(ns lambda-lifters.paparascii.util
   (:require [clojure.data.json :as json]
             [clojure.walk :as walk]
             [hiccup2.core :as h]
-            [lambda-lifters.ascii-blog.log :as log]
+            [lambda-lifters.paparascii.log :as log]
             [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [clojure.string :as str])

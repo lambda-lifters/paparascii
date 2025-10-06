@@ -1,14 +1,14 @@
-(ns lambda-lifters.ascii-blog.build
+(ns lambda-lifters.paparascii.build
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [hashp.preload]
-            [lambda-lifters.ascii-blog.adoc :as adoc]
-            [lambda-lifters.ascii-blog.clean :as clean]
-            [lambda-lifters.ascii-blog.log :as log]
-            [lambda-lifters.ascii-blog.prism-js-highlighter :as highlighter]
-            [lambda-lifters.ascii-blog.site :as site]
-            [lambda-lifters.ascii-blog.site-layout :as layout]
-            [lambda-lifters.ascii-blog.util :as u])
+            [lambda-lifters.paparascii.adoc :as adoc]
+            [lambda-lifters.paparascii.clean :as clean]
+            [lambda-lifters.paparascii.log :as log]
+            [lambda-lifters.paparascii.prism-js-highlighter :as highlighter]
+            [lambda-lifters.paparascii.site :as site]
+            [lambda-lifters.paparascii.site-layout :as layout]
+            [lambda-lifters.paparascii.util :as u])
   (:import (java.io File)))
 
 (defn copy-resources!
@@ -211,7 +211,7 @@
           1. Copy TARGET/public_html/* to your web server
           2. Ensure .htaccess is copied (it may be hidden)
         To test locally:
-          clojure -Tascii-blog serve")))))
+          clojure -Tpaparascii serve")))))
 
 (comment
   ; Example REPL session if you need to debug a thing

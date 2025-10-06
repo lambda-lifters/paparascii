@@ -1,15 +1,16 @@
 name: Build and Deploy
 
-on:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
+on: push
+# pull_request:
+# types:
+# - closed
+# branches:
+# - main
+# push
 
 jobs:
   build-and-deploy:
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
@@ -36,14 +37,15 @@ jobs:
           key: ${{ runner.os }}-clojure-${{ hashFiles('**/deps.edn') }}
           restore-keys: ${{ runner.os }}-clojure-
       
-      - name: Clone ascii-blog
-        run: git clone https://github.com/lambda-lifters/ascii-blog.git /tmp/ascii-blog
-      
-      - name: Install ascii-blog as tool
-        run: clojure -Ttools install-latest :as ascii-blog :local/root /tmp/ascii-blog
-      
+      - name: Install paparascii as tool
+        run: |
+          PA_BLOG_SHA=$( git ls-remote https://github.com/lambda-lifters/paparascii.git HEAD | cut -f 1)
+          clojure -Ttools install io.github.lambda-lifters/paparascii \
+          "{:git/url \"https://github.com/lambda-lifters/paparascii.git\" :git/sha \"${PA_BLOG_SHA}\"}" \
+          :as paparascii
+
       - name: Build site
-        run: clojure -Tascii-blog build
+        run: clojure -Tpaparascii build
       
       - name: Setup SSH
         run: |
@@ -54,10 +56,13 @@ jobs:
       
       - name: Deploy to remote server
         run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            target/ \
-            ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:~/
+          for i in bin public_html
+          # remove --dry-run only once you're sure that this will do what you want it to
+          do
+            rsync --dry-run -avz --delete \
+              -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+              TARGET/$i/ ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:~/$i
+          done
       
       - name: Cleanup
         if: always()

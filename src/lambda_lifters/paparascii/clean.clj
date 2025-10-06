@@ -1,6 +1,6 @@
-(ns lambda-lifters.ascii-blog.clean
-  (:require [lambda-lifters.ascii-blog.log :as log]
-            [lambda-lifters.ascii-blog.site :as site]))
+(ns lambda-lifters.paparascii.clean
+  (:require [lambda-lifters.paparascii.log :as log]
+            [lambda-lifters.paparascii.site :as site]))
 
 (defn clean-target!
   "Clean the TARGET directory completely"

@@ -8,15 +8,15 @@ A fast, modern static site generator built with Clojure.
 
 ```bash
 # Install from local directory (for development)
-clojure -Ttools install lambda-lifters/ascii-blog \
-  '{:local/root "/path/to/ascii-blog"}' \
-  :as ascii-blog
+clojure -Ttools install lambda-lifters/paparascii \
+  '{:local/root "/path/to/paparascii"}' \
+  :as paparascii
 
 # Or install from GitHub (when published)
-# clojure -Ttools install io.github.lambda-lifters/ascii-blog \
-#   '{:git/url "https://github.com/lambda-lifters/ascii-blog.git" 
+# clojure -Ttools install io.github.lambda-lifters/paparascii \
+#   '{:git/url "https://github.com/lambda-lifters/paparascii.git" 
 #     :git/sha "LATEST_SHA"}' \
-#   :as ascii-blog
+#   :as paparascii
 ```
 
 ## Usage
@@ -25,22 +25,22 @@ All commands are run from your site directory (containing `site-config.edn`):
 
 ```bash
 # Initialize a new site
-clojure -Tascii-blog init
+clojure -Tpaparascii init
 
 # Clean the TARGET directory
-clojure -Tascii-blog clean
+clojure -Tpaparascii clean
 
 # Build the site
-clojure -Tascii-blog build
+clojure -Tpaparascii build
 
 # Start development server
-clojure -Tascii-blog serve
+clojure -Tpaparascii serve
 
 # Create a new blog post
-clojure -Tascii-blog new-post :title '"My First Post"'
+clojure -Tpaparascii new-post :title '"My First Post"'
 
 # List all posts
-clojure -Tascii-blog list-posts
+clojure -Tpaparascii list-posts
 ```
 
 ## Creating Aliases (Optional)
@@ -48,15 +48,15 @@ clojure -Tascii-blog list-posts
 For convenience, you can create shorter aliases in your shell:
 
 ```bash
-# Add ao ~/.bashrc or ~/.zshrc
-alias ab-build='clojure -Tascii-blog build'
-alias ab-serve='clojure -Tascii-blog serve'
-alias ab-clean='clojure -Tascii-blog clean'
+# Add to ~/.bashrc or ~/.zshrc
+alias pa-build='clojure -Tpaparascii build'
+alias pa-serve='clojure -Tpaparascii serve'
+alias pa-clean='clojure -Tpaparascii clean'
 ```
 
 ## Site Structure
 
-A valid ascii-blog site has this structure:
+A valid paparascii site has this structure:
 
 ```
 my-blog/
@@ -72,11 +72,11 @@ my-blog/
 ## Quick Start
 
 1. Create a new directory for your site
-2. Run `clojure -Tascii-blog init`
+2. Run `clojure -Tpaparascii init`
 3. Edit `site-config.edn` with your details
 4. Create content in `blog/` and `site/`
-5. Run `clojure -Tascii-blog build`
-6. Run `clojure -Tascii-blog serve` to preview
+5. Run `clojure -Tpaparascii build`
+6. Run `clojure -Tpaparascii serve` to preview
 
 ## Features
 

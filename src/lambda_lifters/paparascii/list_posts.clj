@@ -1,4 +1,4 @@
-(ns lambda-lifters.ascii-blog.list-posts
+(ns lambda-lifters.paparascii.list-posts
   (:require [clojure.string :as str]
             [clojure.java.io :as io]))
 

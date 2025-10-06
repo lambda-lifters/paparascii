@@ -1,10 +1,10 @@
-(ns lambda-lifters.ascii-blog.tool
-  (:require [lambda-lifters.ascii-blog.build :as build]
-            [lambda-lifters.ascii-blog.clean :as clean]
-            [lambda-lifters.ascii-blog.init :as init]
-            [lambda-lifters.ascii-blog.list-posts :as list-posts]
-            [lambda-lifters.ascii-blog.new-post :as new-post]
-            [lambda-lifters.ascii-blog.serve :as serve]))
+(ns lambda-lifters.paparascii.tool
+  (:require [lambda-lifters.paparascii.build :as build]
+            [lambda-lifters.paparascii.clean :as clean]
+            [lambda-lifters.paparascii.init :as init]
+            [lambda-lifters.paparascii.list-posts :as list-posts]
+            [lambda-lifters.paparascii.new-post :as new-post]
+            [lambda-lifters.paparascii.serve :as serve]))
 
 ;; Tool entry points
 (defn clean

@@ -1,13 +1,9 @@
-(ns lambda-lifters.ascii-blog.serve
+(ns lambda-lifters.paparascii.serve
+  (:require [lambda-lifters.paparascii.site :as site])
   (:import [com.sun.net.httpserver HttpServer HttpHandler]
            [java.net InetSocketAddress]
            [java.io File]
            [java.nio.file Files]))
-
-(defn get-site-dir
-  "Get the site directory from environment or current directory"
-  []
-  (or (System/getenv "ASCII_SITE_DIR") "."))
 
 (defn serve-file
   "Serve a static file"
@@ -26,6 +22,7 @@
           (.endsWith path ".css") (.add headers "Content-Type" "text/css")
           (.endsWith path ".js") (.add headers "Content-Type" "application/javascript")
           (.endsWith path ".json") (.add headers "Content-Type" "application/json")
+          (.endsWith path ".pdf") (.add headers "Content-Type" "application/pdf")
           :else (.add headers "Content-Type" "application/octet-stream"))
         (.sendResponseHeaders exchange 200 (alength content))
         (with-open [os (.getResponseBody exchange)]
@@ -46,7 +43,7 @@
 
 (defn start-server
   "Start HTTP server using Java's built-in HttpServer"
-  [{:keys [port dir] :or {port 8000 dir (str (get-site-dir) "/TARGET/public_html")}}]
+  [{:keys [port dir] :or {port 8000 dir (site/public-html-path)}}]
   (println "\n🌐 Starting HTTP server...")
   (println (str "📁 Serving from: " dir))
   (println (str "🔗 URL: http://localhost:" port))
@@ -64,4 +61,4 @@
 (defn -main
   "Main entry point for standalone execution"
   [& _]
-  (start-server {:port 8000 :dir (str (get-site-dir) "/TARGET/public_html")}))
+  (start-server {:port 8000 :dir (site/public-html-path)}))

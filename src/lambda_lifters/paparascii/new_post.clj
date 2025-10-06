@@ -1,8 +1,8 @@
-(ns lambda-lifters.ascii-blog.new-post
+(ns lambda-lifters.paparascii.new-post
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [lambda-lifters.ascii-blog.log :as log]
-            [lambda-lifters.ascii-blog.util :as u])
+            [lambda-lifters.paparascii.log :as log]
+            [lambda-lifters.paparascii.util :as u])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
 

@@ -1,6 +1,6 @@
-(ns lambda-lifters.ascii-blog.adoc
+(ns lambda-lifters.paparascii.adoc
   (:require [clojure.string :as str]
-            [lambda-lifters.ascii-blog.prism-js-highlighter :as highlighter])
+            [lambda-lifters.paparascii.prism-js-highlighter :as highlighter])
   (:import (org.asciidoctor Asciidoctor$Factory Attributes Options SafeMode)))
 
 ;; Create a singleton Asciidoctor instance

@@ -1,4 +1,4 @@
-(ns lambda-lifters.ascii-blog.log
+(ns lambda-lifters.paparascii.log
   "logging functions, mostly aimed at the console for CLI use"
   (:require [clojure.stacktrace :as st]
             [clojure.string :as str]

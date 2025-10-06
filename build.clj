@@ -1,8 +1,8 @@
 (ns build
-  "Build configuration for ascii-blog as an installable tool"
+  "Build configuration for paparascii as an installable tool"
   (:require [clojure.tools.build.api :as b]))
 
-(def lib 'lambda-lifters/ascii-blog)
+(def lib 'lambda-lifters/paparascii)
 (def version "0.1.0")
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
@@ -21,7 +21,7 @@
   (b/copy-dir {:src-dirs ["src" "resources"]
                :target-dir class-dir})
   #_(b/compile-clj {:basis basis
-                  :ns-compile '[lambda-lifters/ansi-blog.tool lambda-lifters/ansi-blog.prism-js-highlighter]
+                  :ns-compile '[lambda-lifters/paparascii.tool lambda-lifters/paparascii.prism-js-highlighter]
                   :class-dir class-dir
                   })
       (b/jar {:class-dir class-dir
@@ -32,6 +32,6 @@
   {:lib lib
    :coord {:local/root "."} ; For local testing
    ;; For git installation:
-   ;; :coord {:git/url "https://github.com/lambda-lifters/ansi-blog.git"
+   ;; :coord {:git/url "https://github.com/lambda-lifters/paparascii.git"
    ;;         :git/sha "LATEST_SHA"}
    })
