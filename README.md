@@ -8,8 +8,9 @@ A fast, modern static site generator built with Clojure.
 
 ```bash
 # Install from local directory (for development)
+LOCAL_ROOT=$(pwd)
 clojure -Ttools install lambda-lifters/paparascii \
-  '{:local/root "/path/to/paparascii"}' \
+  '{:local/root "'${LOCAL_ROOT}'"}' \
   :as paparascii
 
 # Or install from GitHub (when published)
