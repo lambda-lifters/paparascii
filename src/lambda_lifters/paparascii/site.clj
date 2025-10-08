@@ -51,6 +51,7 @@
                    "public_html/js"
                    "public_html/img"
                    "public_html/media"
+                   "public_html/fonts"
                    "public_html/cgi-bin"
                    "bin"
                    "logs"})

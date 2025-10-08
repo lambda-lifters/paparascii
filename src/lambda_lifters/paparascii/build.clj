@@ -6,6 +6,7 @@
             [lambda-lifters.paparascii.clean :as clean]
             [lambda-lifters.paparascii.log :as log]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter]
+            [lambda-lifters.paparascii.zip-fetch :as zip-fetch]
             [lambda-lifters.paparascii.site :as site]
             [lambda-lifters.paparascii.site-layout :as layout]
             [lambda-lifters.paparascii.util :as u])
@@ -173,6 +174,22 @@
     "Generating index.html"
     (spit (site/public-html-path "index.html") (layout/index-layout @site/*site-config posts))))
 
+(defn font-awesome-file-name-mapping [output-dir entry-name]
+  (condp #(%1 %2) entry-name
+    (partial re-matches #"^.*fonts/(.*)") :>> #(io/file output-dir "fonts" (second %))
+    (partial re-matches #"^.*[^s]css/(.*)") :>> #(io/file output-dir "css" (second %))
+    nil))
+
+(defn install-standard-assets!
+  "Installs the standard fonts, css and js required for AsciiDoc to work, notably with fontawesome
+
+  From: https://docs.asciidoctor.org/asciidoctor/latest/html-backend/local-font-awesome/
+  The first thing you’ll need to do is download a copy of Font Awesome.
+  The HTML converter currently integrates with Font Awesome 4, so make sure you’re using that version."
+  []
+  (zip-fetch/fetch-and-unzip "https://fontawesome.com/v4/assets/font-awesome-4.7.0.zip"
+                             :file-name-mapping (partial font-awesome-file-name-mapping (site/public-html-path))))
+
 (defn build! [& {:keys [parallel?] :or {parallel? true}}]
   (log/in-application
     "Building Static Blog"
@@ -184,6 +201,7 @@
     (copy-resources!)
     ;; Copy assets (css, js, img, cgi-bin)
     (copy-assets!)
+    (install-standard-assets!)
     ;; Copy Babashka executable (optional - could be useful for CGI scripts)
     (copy-babashka!)
     ;; Process site pages (about, contact, etc.)

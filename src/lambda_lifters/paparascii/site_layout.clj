@@ -25,6 +25,7 @@
    additional-head
    [:link (assoc (:stylesheet bootstrap) :rel "stylesheet" :crossorigin "anonymous")]
    [:link {:rel "stylesheet" :href (:icon-css bootstrap)}]
+   [:link {:rel "stylesheet" :href "/css/font-awesome.css"}]
    [:link {:rel "stylesheet" :href "/css/page-style.css"}]])
 
 (defn navbar [site-name]

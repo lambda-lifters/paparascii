@@ -26,6 +26,7 @@
                    "assets/js"
                    "assets/img"
                    "assets/media"
+                   "assets/fonts"
                    "templates"
                    ".github/workflows"]]
         (u/ensure-directory dir)))
