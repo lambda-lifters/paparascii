@@ -13,10 +13,14 @@ clojure -Ttools install lambda-lifters/paparascii \
   :as paparascii
 
 # Or install from GitHub (when published)
-# clojure -Ttools install io.github.lambda-lifters/paparascii \
-#   '{:git/url "https://github.com/lambda-lifters/paparascii.git" 
-#     :git/sha "LATEST_SHA"}' \
-#   :as paparascii
+
+# If you're installing from this repo, and it's up to date with GitHub;
+# you can use this... otherwise, pick your own SHA
+LATEST_SHA=$(git rev-parse HEAD)
+clojure -Ttools install io.github.lambda-lifters/paparascii \
+'{:git/url "https://github.com/lambda-lifters/paparascii.git" 
+     :git/sha "'${LATEST_SHA}'"}' \
+   :as paparascii
 ```
 
 ## Usage
