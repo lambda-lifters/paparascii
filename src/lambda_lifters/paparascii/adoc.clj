@@ -1,7 +1,8 @@
 (ns lambda-lifters.paparascii.adoc
   (:require [clojure.string :as str]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter])
-  (:import (org.asciidoctor Asciidoctor$Factory Attributes Options SafeMode)))
+  (:import (org.asciidoctor Asciidoctor Asciidoctor$Factory Attributes Options SafeMode)
+           (org.asciidoctor.ast Document)))
 
 ;; Create a singleton Asciidoctor instance
 (def *asciidoctor (delay (let [doctor (Asciidoctor$Factory/create)]
@@ -32,17 +33,19 @@
   [content & _]
   (.convert @*asciidoctor content @*asciidoctor-options))
 
+(defn get-document-metadata [content & _]
+  (into {}
+        (map (juxt (comp keyword clojure.string/lower-case key) val))
+        (Document/.getAttributes
+          (Asciidoctor/.load @*asciidoctor content @*asciidoctor-options))))
+
 (defn parse-asciidoc-header
   "Extract metadata from AsciiDoc header"
   [content]
-  (let [lines (str/split-lines content)
-        get-meta (fn [prefix]
-                   (some #(when (str/starts-with? % prefix)
-                            (str/trim (subs % (count prefix))))
-                         lines))]
-    {:title       (or (get-meta "= ") "Untitled")
-     :author      (or (get-meta ":author:") "Anonymous")
-     :date        (get-meta ":date:")
-     :description (get-meta ":description:")
-     :tags        (when-let [tags (get-meta ":tags:")] (str/split tags #",\s*"))}))
-
+  (let [document-metadata (get-document-metadata content)]
+    {:title       (get document-metadata :doctitle "Untitled")
+     :author      (get document-metadata :author "Anonymous")
+     :date        (:date document-metadata)
+     :description (:description document-metadata)
+     :raw-tags    (:tags document-metadata)
+     :tags        (some-> document-metadata :tags (str/split #"(,|\s)+"))}))

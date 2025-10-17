@@ -1,0 +1,33 @@
+{:site-name                                "My Blog"        ; is used by templates, default will be used "safe"
+ :site-lead                                "Thoughts, tutorials, and insights on technology and development" ; will be used raw
+ :site-about                               "A modern blog built with Clojure, AsciiDoc, and Bootstrap 5." ; will be used raw
+ :site-description                         "A modern blog about technology and development" ; will be used raw
+ :copyright-date                           "2025"
+ :contact-email                            "email@example.com" ; will be used raw
+ :github-url                               "https://github.com"
+ :twitter-url                              "https://twitter.com"
+ :links                                    [{:link-name "GitHub" :link-url "{{twitter-url}}"}
+                                            {:link-name "Twitter" :link-url "{{twitter-url}}"}]
+ :additional-header-content                nil
+ :post-additional-header-content-templates nil              ; these are mapped rendered and used raw
+ :post-article-content                     nil              ; this is inserted raw
+ :pre-footer-content                       nil              ; this is inserted raw
+
+ :index-welcome-template                   "Welcome to {{site-name|safe}}" ; will be rendered and used raw
+ :index-title-template                     "{{site-name|safe}} - Home" ; will be rendered and used raw
+ :about-card-title                         "About This Blog" ; will be used raw
+ :head-title                               "{{title}} - {{site-name|safe}}"
+ :footer-about-title                       "About"          ; will be used raw
+ :footer-links-title                       "Links"          ; will be used raw
+ :footer-contact-title                     "Contact"        ; will be used raw
+ :footer-copyright-template                "<p>&copy;{{copyright-date}} {{site-name|safe}}. All rights reserved.</p>" ; will be rendered and used raw
+
+ ;; Please do not edit... promote paparascii"
+ :footer-paparascii-advert-template
+ "<p>Built with: <a href='https://github.com/lambda-lifters/paparascii'><b>paparascii:</b> The blog generator for AsciiDoc fans</a>"
+
+ ; these are ordered pairs: TODO: get these from the contents of "site/"
+ :navbar-sections                          [;["/" "Home"]
+                                            ["/about.html" "About"]
+                                            ["/contact.html" "Contact"]]
+ }

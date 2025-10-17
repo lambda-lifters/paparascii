@@ -1,8 +1,9 @@
 (ns lambda-lifters.paparascii.new-post
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [lambda-lifters.paparascii.log :as log]
-            [lambda-lifters.paparascii.util :as u])
+            [clojure.tools.logging :as log]
+            [lambda-lifters.paparascii.util :as u]
+            [lambda-lifters.lambda-liftoff.environmental :as e])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
 
@@ -20,7 +21,7 @@
   [& {:keys [title]}]
   (if-not title
     (log/error "Error: Please provide a title with :title \"Your Title\"")
-    (let [author (u/get-git-user-name)
+    (let [author (e/get-git-user-name)
           date (.format (LocalDate/now)
                         DateTimeFormatter/ISO_LOCAL_DATE)
           filename (str "blog/" (u/slugify title) ".adoc")
@@ -34,12 +35,11 @@
 
       (if (.exists (io/file filename))
         (do
-          (log/error (str "❌ File already exists: " filename))
-          (log/error "Please choose a different title or delete the existing file."))
+          (log/error "❌ File already exists: " filename " Please choose a different title or delete the existing file."))
         (do
           (io/make-parents filename)
           (spit filename content)
-          (log/success "
+          (log/info "
           ✅ Created new blog post: " filename "
           Next steps:
             1. Edit the file: " filename "

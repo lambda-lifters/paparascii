@@ -1,9 +1,7 @@
 (ns lambda-lifters.paparascii.site
-  (:require [lambda-lifters.paparascii.log :as log]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import (java.io PushbackReader)))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [lambda-lifters.lambda-liftoff.io :as ll-io]))
 
 (defn resolve-site-dir [& _]
   (or (System/getProperty "SITE_DIR")
@@ -59,14 +57,10 @@
 (defn load-config
   "Load site configuration from site-config.edn"
   []
-  (let [config-file (site-path "site-config.edn")]
-    (try
-      (let [config (with-open [rdr (PushbackReader. (io/reader config-file))] (edn/read rdr))]
-        (when-not (map? config) (throw (ex-info "site-config.edn is not a map" {:parsed-config config})))
-        config)
-      (catch Exception e
-        (log/error (str "Error reading config file: " (.getMessage e)))
-        (throw e)))))
+  (let [default-config-file (io/resource "site-config-defaults.edn") ; map be overwritten by "site-config.edn"
+        config-file (site-path "site-config.edn")]
+    (merge (ll-io/load-map-from-resource default-config-file "site-config-defaults.edn")
+           (ll-io/load-map-from-resource config-file "site-config.edn"))))
 
 (def *site-config (delay (load-config)))
 

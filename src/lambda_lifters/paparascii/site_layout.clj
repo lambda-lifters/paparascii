@@ -1,7 +1,8 @@
 (ns lambda-lifters.paparascii.site-layout
   (:require [clojure.string :as str]
             [hiccup2.core :as h]
-            [lambda-lifters.paparascii.util :as u]))
+            [lambda-lifters.paparascii.util :as u]
+            [selmer.parser :as selmer]))
 
 (def bootstrap {
                 :stylesheet {:href      "https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -11,68 +12,65 @@
                              :integrity "sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"}
                 })
 
-(def navbar-sections [["/" "Home"]
-                      #_["/blog" "Blog"]
-                      ["/about.html" "About"]
-                      ["/contact.html" "Contact"]])
-
-(defn head [title site-name description additional-head]
-  [:head
-   [:meta {:charset "UTF-8"}]
-   [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-   [:title title " - " site-name]
-   (when description [:meta {:name "description" :content "description "}])
-   additional-head
-   [:link (assoc (:stylesheet bootstrap) :rel "stylesheet" :crossorigin "anonymous")]
-   [:link {:rel "stylesheet" :href (:icon-css bootstrap)}]
-   [:link {:rel "stylesheet" :href "/css/font-awesome.css"}]
-   [:link {:rel "stylesheet" :href "/css/page-style.css"}]])
-
-(defn navbar [site-name]
-  [:nav {:class "navbar navbar-expand-lg navbar-light"}
-   [:div {:class "container"}
-    [:a {:class "navbar-brand" :href "/"} site-name]
-    [:button {:class "navbar-toggler" :type "button" :data-bs-toggle "collapse" :data-bs-target "#navbarNav"}
-     [:span {:class "navbar-toggler-icon"}]]
-    [:div {:class "collapse navbar-collapse" :id "navbarNav"}
-     [:ul {:class "navbar-nav ms-auto"}
-      (map #(vector :li {:class "nav-item"} [:a {:class "nav-link" :href (first %)} (second %)]) navbar-sections)]]]])
-
-(defn footer [site-about links contact-email copyright-date site-name]
-  (list
-    [:footer
-     [:div.container
-      [:div.row
-       [:div.col-md-4 [:h5 "About"] [:p site-about]]
-       [:div.col-md-4 [:h5 "Links"] [:ul.list-unstyled
-                                     (map (fn [{:keys [link-name link-url]}]
-                                            [:li [:a.text-white-50 {:href link-url} link-name]])
-                                          links)]]
-       [:div.col-md-4 [:h5 "Contact"] [:p.text-white-50 contact-email]]]
-      [:hr.bg-white-50]
-      [:div.text-center.text-white-50
-       [:p "©" copyright-date " " site-name ". All rights reserved."]
-       [:p "Built with: " [:a {:href "https://github.com/lambda-lifters/paparascii"}
-                           [:b "paparascii:"] " The blog generator for AsciiDoc fans"]]]]]
-    [:script (assoc (:script bootstrap) :crossorigin "anonymous")]))
+(defn navbar [site-name navbar-sections]
+  [:nav.navbar.navbar-expand-lg.navbar-light
+   [:div.container
+    [:a.navbar-brand {:href "/"} (h/raw site-name)]
+    [:button.navbar-toggler {:type "button" :data-bs-toggle "collapse" :data-bs-target "#navbarNav"}
+     [:span.navbar-toggler-icon]]
+    [:div.collapse.navbar-collapse {:id "navbarNav"}
+     [:ul.navbar-nav.ms-auto
+      (map #(vector :li.nav-item [:a.nav-link {:href (first %)} (second %)]) navbar-sections)]]]])
 
 (defn html-template
   "Generate complete HTML page with Bootstrap"
-  [site-config {:keys [title description content additional-head]}]
-  (let [{:keys [site-name copyright-date contact-email links site-about]} site-config]
+  [site-config {:keys [description content additional-head] :as page-meta}]
+  (let [{:keys [site-name contact-email links site-about
+                additional-header-content
+                footer-about-title
+                footer-links-title
+                footer-contact-title
+                footer-copyright-template
+                footer-paparascii-advert-template
+                navbar-sections]} site-config]
     (h/html
       (h/raw "<!DOCTYPE html>")
       [:html {:lang "en"}
-       (head title site-name description
-             (concat additional-head
-                     (u/handle-config-markup-directives
-                       (:additional-header-content site-config)
-                       :title title)))
+       ;; --------------------
+       [:head
+        [:meta {:charset "UTF-8"}]
+        [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+        [:title (h/raw (selmer/render (:head-title site-config) (merge site-config page-meta)))]
+        (when description [:meta {:name "description" :content description}])
+        (concat additional-head
+                (map #(h/raw (selmer/render % (merge site-config page-meta))) additional-header-content))
+        [:link (assoc (:stylesheet bootstrap) :rel "stylesheet" :crossorigin "anonymous")]
+        [:link {:rel "stylesheet" :href (:icon-css bootstrap)}]
+        [:link {:rel "stylesheet" :href "/css/font-awesome.css"}]
+        [:link {:rel "stylesheet" :href "/css/page-style.css"}]]
+       ;; --------------------
        [:body
-        (list
-          (navbar site-name)
-          [:div.content-wrapper content]
-          (footer site-about links contact-email copyright-date site-name))]])))
+        (navbar site-name navbar-sections)
+        [:div.content-wrapper content]]
+       ;; --------------------
+       (list
+         [:footer
+          [:div.container
+           [:div.row
+            [:div.col-md-4 [:h5 (h/raw footer-about-title)]
+             [:p (h/raw site-about)]]
+            [:div.col-md-4 [:h5 (h/raw footer-links-title)]
+             [:ul.list-unstyled
+              (map (fn [{:keys [link-name link-url]}]
+                     [:li [:a.text-white-50 {:href (h/raw (selmer/render link-url site-config))} link-name]])
+                   links)]]
+            [:div.col-md-4 [:h5 (h/raw footer-contact-title)]
+             [:p.text-white-50 (h/raw contact-email)]]]
+           [:hr.bg-white-50]
+           [:div.text-center.text-white-50
+            (h/raw (selmer/render footer-copyright-template site-config))
+            (h/raw (selmer/render footer-paparascii-advert-template site-config))]]]
+         [:script (assoc (:script bootstrap) :crossorigin "anonymous")])])))
 
 (defn tag-url [tag] (str "/blog/tags/" (u/slugify tag) ".html"))
 
@@ -90,51 +88,43 @@
    (when description [:p description])
    (when tags [:div.tags (map tag-anchor tags)])])
 
-(defn index-layout [site-config posts]
-  (let [{:keys [site-name site-lead site-about site-description]} site-config]
-    (html-template
-      site-config
-      {:title       (str site-name " - Home")
-       :description site-description
-       :is-index?   true
-       :content     (list
-                      [:div.hero-section
-                       [:div.container
-                        [:h1.display-4 (str "Welcome to " site-name)]
-                        [:p.lead site-lead]]]
-                      [:div.container
-                       [:div.row
-                        [:div.col-lg-8
-                         [:h2.mb-4 "Recent Posts"]
-                         (if (empty? posts)
-                           [:div.alert.alert-info "No blog posts yet. Add some .adoc files to the blog directory!"]
-                           (->> posts
-                                (sort-by (comp :date :meta))
-                                reverse
-                                (map #(index-entry-for-post % (:meta %)))))]
-                        [:div.col-lg-4
-                         [:div.card
-                          [:div.card-body
-                           [:h5.card-title "About This Blog"]
-                           [:p.card-text site-about]]]
-                         #_[:div.card.mt-3
-                            [:div.card-body
-                             [:h5.card-title "Categories"]
-                             [:ul.list-unstyled
-                              [:li [:a {:href "#"} "Technology"]]
-                              [:li [:a {:href "#"} "Programming"]]
-                              [:li [:a {:href "#"} "Web Development"]]]]]]]])})))
+(defn- index-content [{:keys [site-lead site-about index-welcome-template about-card-title] :as site-config} posts]
+  (list
+    [:div.hero-section
+     [:div.container
+      [:h1.display-4 (h/raw (selmer/render index-welcome-template site-config))]
+      [:p.lead (h/raw site-lead)]]]
+    [:div.container
+     [:div.row
+      [:div.col-lg-8
+       [:h2.mb-4 "Recent Posts"]
+       (if (empty? posts)
+         [:div.alert.alert-info "No blog posts yet. Add some .adoc files to the blog directory!"]
+         (->> posts
+              (sort-by (comp :date :page-meta))
+              reverse
+              (map #(index-entry-for-post % (:page-meta %)))))]
+      (when site-about [:div.col-lg-4
+                        [:div.card
+                         [:div.card-body
+                          [:h5.card-title (h/raw about-card-title)]
+                          [:p.card-text (h/raw site-about)]]]])]]))
 
-(defn site-page-layout [site-config {:keys [title description] :as meta} rendered-html]
+(defn index-layout [{:keys [site-description index-title-template] :as site-config} posts]
+  (html-template
+    site-config
+    {:title       (h/raw (selmer/render index-title-template site-config))
+     :description (h/raw site-description)
+     :is-index?   true
+     :content     (index-content site-config posts)}))
+
+(defn site-page-layout [site-config {:keys [title description] :as page-meta} rendered-html]
   (html-template
     site-config
     {:title       title
      :description description
-     :meta        meta
-     :content     [:div.container.mt-4
-                   [:article.blog-post
-                    [:h2 title]
-                    (h/raw rendered-html)]]}))
+     :page-meta   page-meta
+     :content     [:div.container.mt-4 [:article.blog-post [:h2 title] (h/raw rendered-html)]]}))
 
 (defn- tags-block [tags & classes]
   (when tags [:div.tags (when (seq classes) {:class (str/join classes " ")}) (map tag-anchor tags)]))
@@ -143,28 +133,30 @@
   [:div.blog-meta [:i.bi.bi-calendar] " " date " • " [:i.bi.bi-person] " " author])
 
 
-(defn blog-post-layout [{:keys [post-additional-header-content post-article-content] :as site-config}
-                        {:keys [title description tags] :as meta}
+(defn blog-post-layout [{:keys [post-additional-header-content-templates post-article-content] :as site-config}
+                        {:keys [title description tags] :as page-meta}
                         rendered-html additional-css]
   (html-template
     site-config
     {:title           title
      :description     description
-     :meta            meta
-     :additional-head (conj (u/handle-config-markup-directives post-additional-header-content :title title) additional-css)
+     :page-meta       page-meta
+     :additional-head (conj
+                        (map #(h/raw (selmer/render % (merge site-config page-meta))) post-additional-header-content-templates)
+                        additional-css)
      :content         [:div.container.mt-4
                        [:article.blog-post
                         [:h1 title]
-                        (blog-meta-block meta)
+                        (blog-meta-block page-meta)
                         (tags-block tags "mb-3")
                         (h/raw rendered-html)]
-                       post-article-content]}))
+                       (map h/raw post-article-content)]}))
 
-(defn tag-hiccup-for-post [{:keys [meta file]}]
-  (let [{:keys [title description tags]} meta]
+(defn tag-hiccup-for-post [{:keys [page-meta file]}]
+  (let [{:keys [title description tags]} page-meta]
     [:div.blog-post
      [:h3 [:a {:href (blog-url file)} title]]
-     (blog-meta-block meta)
+     (blog-meta-block page-meta)
      (when description [:p description])
      (tags-block tags)]))
 

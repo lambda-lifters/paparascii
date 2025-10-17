@@ -1,9 +1,9 @@
 (ns lambda-lifters.paparascii.serve
   (:require [lambda-lifters.paparascii.site :as site])
-  (:import [com.sun.net.httpserver HttpServer HttpHandler]
-           [java.net InetSocketAddress]
-           [java.io File]
-           [java.nio.file Files]))
+  (:import (com.sun.net.httpserver HttpHandler HttpServer)
+           (java.io File)
+           (java.net InetSocketAddress)
+           (java.nio.file Files)))
 
 (defn serve-file
   "Serve a static file"

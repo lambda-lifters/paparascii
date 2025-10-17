@@ -1,53 +1,48 @@
 (ns lambda-lifters.paparascii.init
   (:require [clojure.pprint :as pp]
-            [lambda-lifters.paparascii.log :as log]
-            [lambda-lifters.paparascii.site :as site]
-            [lambda-lifters.paparascii.util :as u])
+            [clojure.tools.logging :as log]
+            [lambda-lifters.lambda-liftoff.io :as ll-io]
+            [lambda-lifters.paparascii.site :as site])
   (:import (java.nio.file Path)))
 
 (defn init!
   "Initialize a new site with basic structure"
   [& {:keys [name] :or {name "My Blog"}}]
-  (log/in-section
-   (str "Initializing new site: " name)
-   (let [config {:site-name name
-                 :copyright-date "2024"
-                 :contact-email "email@example.com"
-                 :site-lead "Welcome to my blog"
-                 :site-about "A blog about interesting things"
-                 :links [{:link-name "GitHub" :link-url "https://github.com"}
-                         {:link-name "Twitter" :link-url "https://twitter.com"}]}]
-     (log/in-section
-      "Create directories"
-      (doseq [dir ["blog"
-                   "site"
-                   "resources"
-                   "assets/css"
-                   "assets/js"
-                   "assets/img"
-                   "assets/media"
-                   "assets/fonts"
-                   "templates"
-                   ".github/workflows"]]
-        (u/ensure-directory dir)))
-     (log/in-section
-      "Create site-config.edn"
-      (spit "site-config.edn" (with-out-str (pp/pprint config))))
-     (log/in-section
-      "Copy default templates from resources"
-
-      (when-let [template-site (u/resource-path "template-site")]
-        (doseq [template-file (file-seq (.toFile template-site))
-                :when (.isFile template-file)]
-          (let [relative-file (.toFile (Path/.relativize template-site (.toPath template-file)))
-                destination-file (site/site-path relative-file)]
-            (u/copy-file template-file destination-file)))))
-     (log/in-section
-      "Copy GitHub workflow"
-      (when-let [workflow-template (u/resource-path "template-github-workflow-build-and-deploy.yml")]
-        (u/copy-file (.toFile workflow-template) (site/site-path ".github/workflows/build-and-deploy.yml"))))
-     (log/success "
+  (log/info "Initializing new site: " name)
+  (let [config {:site-name      name
+                :copyright-date "2024"
+                :contact-email  "email@example.com"
+                :site-lead      "Welcome to my blog"
+                :site-about     "A blog about interesting things"
+                :links          [{:link-name "GitHub" :link-url "https://github.com"}
+                                 {:link-name "Twitter" :link-url "https://twitter.com"}]}]
+    (log/info "Create directories")
+    (doseq [dir ["blog"
+                 "site"
+                 "resources"
+                 "assets/css"
+                 "assets/js"
+                 "assets/img"
+                 "assets/media"
+                 "assets/fonts"
+                 "templates"
+                 ".github/workflows"]]
+      (ll-io/ensure-directory dir))
+    (log/info "Create site-config.edn")
+    (spit "site-config.edn" (with-out-str (pp/pprint config)))
+    (log/info "Copy default templates from resources")
+    (when-let [template-site (ll-io/resource-path "template-site")]
+      (doseq [template-file (file-seq (.toFile template-site))
+              :when (.isFile template-file)]
+        (let [relative-file (.toFile (Path/.relativize template-site (.toPath template-file)))
+              destination-file (site/site-path relative-file)]
+          (ll-io/copy-file template-file destination-file))))
+    (when-let [workflow-template (ll-io/resource-path "template-github-workflow-build-and-deploy.yml")]
+      (log/info "Copy GitHub workflow")
+      (ll-io/copy-file (.toFile workflow-template)
+                       (site/site-path ".github/workflows/build-and-deploy.yml")))
+    (log/info "
       Site initialized! Next steps:
         1. Edit site-config.edn to customize your site
         2. Run: clojure -Tpaparascii build
-        3. Run: clojure -Tpaparascii serve"))))
+        3. Run: clojure -Tpaparascii serve")))

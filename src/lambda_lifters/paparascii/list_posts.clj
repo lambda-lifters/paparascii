@@ -1,6 +1,6 @@
 (ns lambda-lifters.paparascii.list-posts
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (defn extract-metadata
   "Extract metadata from an AsciiDoc file"
