@@ -1,5 +1,6 @@
 (ns lambda-lifters.paparascii.adoc
-  (:require [clojure.string :as str]
+  (:require [clojure.string :as string]
+            [clojure.string :as str]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter])
   (:import (org.asciidoctor Asciidoctor Asciidoctor$Factory Attributes Options SafeMode)
            (org.asciidoctor.ast Document)))
@@ -39,6 +40,17 @@
         (Document/.getAttributes
           (Asciidoctor/.load @*asciidoctor content @*asciidoctor-options))))
 
+(defn asciidoc-to-preamble-html
+  "Converts only the preabmle to HTML"
+  [content & _]
+  (when-let [preamble #p (->> content
+                              string/split-lines
+                              (drop-while seq)
+                              (drop-while empty?)
+                              (take-while (complement #(clojure.string/starts-with? % "=")))
+                              (string/join "\n"))]
+    (asciidoc-to-html preamble)))
+
 (defn parse-asciidoc-header
   "Extract metadata from AsciiDoc header"
   [content]
@@ -46,6 +58,7 @@
     {:title       (get document-metadata :doctitle "Untitled")
      :author      (get document-metadata :author "Anonymous")
      :date        (:date document-metadata)
-     :description (:description document-metadata)
+     :description (or (asciidoc-to-preamble-html content)
+                      (:description document-metadata))
      :raw-tags    (:tags document-metadata)
      :tags        (some-> document-metadata :tags (str/split #"(,|\s)+"))}))

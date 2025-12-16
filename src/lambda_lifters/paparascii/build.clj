@@ -101,11 +101,11 @@
         (doall (map #(process-site-page! (.getPath %)) ascii-doc-files))))))
 
 (defn blog-post-html [content file]
-  (let [meta (adoc/parse-asciidoc-header content)
+  (let [page-meta (adoc/parse-asciidoc-header content)
         [html-content additional-css]
         (binding [highlighter/additional-header-css nil]
           [(adoc/asciidoc-to-html content file) highlighter/additional-header-css])]
-    [(layout/blog-post-layout @site/*site-config meta html-content additional-css) meta]))
+    [(layout/blog-post-layout @site/*site-config page-meta html-content additional-css) page-meta]))
 
 (defn process-blog-post!
   "Process a single blog post file"
@@ -117,9 +117,9 @@
         output-file (site/public-html-path "blog" output-file-name)]
     (log/info output-file-name)
     (io/make-parents output-file)
-    (let [[output meta] (blog-post-html content file)]
+    (let [[output page-meta] (blog-post-html content file)]
       (spit output-file output)
-      {:file basename :page-meta meta})))
+      {:file basename :page-meta page-meta})))
 
 (defn tag-index-html [tag posts]
   (let [sorted-posts (->> posts
@@ -152,7 +152,8 @@
   "Generate the index page with all blog posts"
   [posts]
   (log/info "Generating index.html")
-  (spit (site/public-html-path "index.html") (layout/index-layout @site/*site-config posts)))
+  (spit (site/public-html-path "index.html")
+        (layout/index-layout @site/*site-config posts)))
 
 (defn font-awesome-file-name-mapping [output-dir entry-name]
   (condp #(%1 %2) entry-name
