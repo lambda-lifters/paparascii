@@ -7,6 +7,7 @@
             [lambda-lifters.lambda-liftoff.zip-fetch :as zf]
             [lambda-lifters.paparascii.adoc :as adoc]
             [lambda-lifters.paparascii.clean :as clean]
+            [lambda-lifters.paparascii.file-patterns :as file-patterns]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter]
             [lambda-lifters.paparascii.site :as site]
             [lambda-lifters.paparascii.site-layout :as layout]
@@ -31,7 +32,9 @@
   "Copy all assets from assets/ to TARGET/public_html/"
   []
   (log/info "Copying assets...")
-  (let [assets-dir (site/site-file "assets")]
+  (let [assets-dir (site/site-file "assets")
+        site-config @site/*site-config
+        executable-patterns (:cgi-bin-executable-patterns site-config)]
     (when (.exists assets-dir)
       (doseq [subdir (filter File/.isDirectory (.listFiles assets-dir))]
         (let [subdir-name (.getName subdir)
@@ -43,8 +46,10 @@
                   target-file (io/file target-dir relative-path)]
               (io/make-parents target-file)
               (io/copy file target-file)
-              ;; Make CGI scripts executable
-              (when (= subdir-name "cgi-bin")
+              ;; Make CGI scripts executable if they match configured patterns
+              (when (and (= subdir-name "cgi-bin")
+                         (file-patterns/should-be-executable? relative-path executable-patterns))
+                (log/info "  Making executable:" relative-path)
                 (.setExecutable target-file true)))))))))
 
 (defn copy-babashka!
