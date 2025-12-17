@@ -1,6 +1,5 @@
 (ns lambda-lifters.paparascii.adoc
-  (:require [clojure.string :as string]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter])
   (:import (org.asciidoctor Asciidoctor Asciidoctor$Factory Attributes Options SafeMode)
            (org.asciidoctor.ast Document)))
@@ -41,14 +40,13 @@
           (Asciidoctor/.load @*asciidoctor content @*asciidoctor-options))))
 
 (defn asciidoc-to-preamble-html
-  "Converts only the preabmle to HTML"
+  "Converts only the preamble to HTML"
   [content & _]
   (when-let [preamble #p (->> content
-                              string/split-lines
-                              (drop-while seq)
+                              str/split-lines
                               (drop-while empty?)
-                              (take-while (complement #(clojure.string/starts-with? % "=")))
-                              (string/join "\n"))]
+                              (take-while (complement #(str/starts-with? % "=")))
+                              (str/join "\n"))]
     (asciidoc-to-html preamble)))
 
 (defn parse-asciidoc-header
