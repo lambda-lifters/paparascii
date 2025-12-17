@@ -28,8 +28,18 @@
         (throw (ex-info "exception raised reading css source resource" {:resource-path rsrc} e))))))
 
 (defn get-engine- [_]
-  (let [script-engine (-> (ScriptEngineManager.) (.getEngineByName "nashorn"))
+  (let [manager (ScriptEngineManager.)
+        ;; Try GraalVM JS first, fallback to any JavaScript engine available
+        script-engine (or (.getEngineByName manager "graal.js")
+                         (.getEngineByName manager "JavaScript")
+                         (throw (ex-info "No JavaScript engine available" {})))
+        engine-factory (.getFactory script-engine)
         rsrc "prismjs/prism.js"]
+    ;; Log which engine is being used for verification
+    (println "🔧 JavaScript engine:"
+             (.getEngineName engine-factory)
+             "version:"
+             (.getEngineVersion engine-factory))
     (try
       (with-open [rdr (io/reader (io/resource rsrc))]
         (.eval script-engine rdr))
