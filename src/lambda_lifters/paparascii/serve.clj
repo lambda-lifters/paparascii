@@ -1,36 +1,78 @@
 (ns lambda-lifters.paparascii.serve
-  (:require [lambda-lifters.paparascii.site :as site])
+  (:require [lambda-lifters.paparascii.site :as site]
+            [lambda-lifters.paparascii.path-security :as path-sec]
+            [clojure.string :as str]
+            [clojure.java.io :as io])
   (:import (com.sun.net.httpserver HttpHandler HttpServer)
            (java.io File)
            (java.net InetSocketAddress)
            (java.nio.file Files)))
 
+(def content-types
+  "Map of file extensions to MIME content types"
+  {"html" "text/html"
+   "css"  "text/css"
+   "js"   "application/javascript"
+   "json" "application/json"
+   "pdf"  "application/pdf"
+   "png"  "image/png"
+   "jpg"  "image/jpeg"
+   "jpeg" "image/jpeg"
+   "gif"  "image/gif"
+   "svg"  "image/svg+xml"
+   "ico"  "image/x-icon"
+   "woff" "font/woff"
+   "woff2" "font/woff2"
+   "ttf"  "font/ttf"
+   "eot"  "application/vnd.ms-fontobject"})
+
+(defn file-extension
+  "Extract file extension from path"
+  [path]
+  (some-> (str/last-index-of path ".")
+          inc
+          (->> (subs path))))
+
+(defn content-type
+  "Get content-type for file extension"
+  [path]
+  (get content-types (file-extension path) "application/octet-stream"))
+
 (defn serve-file
-  "Serve a static file"
+  "Serve a static file with path traversal protection"
   [exchange ^String root-dir ^String path]
-  (let [file (File. root-dir path)
-        path (if (and (.isDirectory file) (.endsWith path "/"))
-               (str path "index.html")
-               path)
-        file (File. root-dir path)]
-    (if (.exists file)
-      (let [content (Files/readAllBytes (.toPath file))
-            headers (.getResponseHeaders exchange)]
-        ;; Set content type based on file extension
-        (cond
-          (.endsWith path ".html") (.add headers "Content-Type" "text/html")
-          (.endsWith path ".css") (.add headers "Content-Type" "text/css")
-          (.endsWith path ".js") (.add headers "Content-Type" "application/javascript")
-          (.endsWith path ".json") (.add headers "Content-Type" "application/json")
-          (.endsWith path ".pdf") (.add headers "Content-Type" "application/pdf")
-          :else (.add headers "Content-Type" "application/octet-stream"))
-        (.sendResponseHeaders exchange 200 (alength content))
-        (with-open [os (.getResponseBody exchange)]
-          (.write os content)))
-      ;; File not found
-      (do
-        (.sendResponseHeaders exchange 404 0)
-        (.close (.getResponseBody exchange))))))
+  (try
+    ;; First validation: check initial requested path
+    (let [requested-file (io/file root-dir path)
+          _ (path-sec/validate-path! root-dir requested-file)
+
+          ;; Handle directory index files
+          path (if (and (.isDirectory requested-file) (.endsWith path "/"))
+                 (str path "index.html")
+                 path)
+          file (io/file root-dir path)]
+
+      ;; Second validation: re-check after potential index.html append
+      (path-sec/validate-path! root-dir file)
+
+      (if (.exists file)
+        (let [content (Files/readAllBytes (.toPath file))
+              headers (.getResponseHeaders exchange)]
+          ;; Set content type based on file extension
+          (.add headers "Content-Type" (content-type path))
+          (.sendResponseHeaders exchange 200 (alength content))
+          (with-open [os (.getResponseBody exchange)]
+            (.write os content)))
+        ;; File not found
+        (do
+          (.sendResponseHeaders exchange 404 0)
+          (.close (.getResponseBody exchange)))))
+
+    (catch SecurityException e
+      ;; Path traversal attempt detected
+      (println "⚠️  Security: Path traversal blocked:" path)
+      (.sendResponseHeaders exchange 403 0)
+      (.close (.getResponseBody exchange)))))
 
 (defn create-handler
   "Create HTTP handler for static file serving"

@@ -1,0 +1,36 @@
+(ns lambda-lifters.paparascii.path-security
+  "Security utilities for preventing path traversal attacks"
+  (:require [clojure.java.io :as io])
+  (:import (java.io File)))
+
+(defn canonical-path
+  "Get canonical path of a file, handling IOException.
+  Canonical paths are absolute and resolve all symbolic links and . / .. segments."
+  [file]
+  (.getCanonicalPath (io/as-file file)))
+
+(defn path-within-root?
+  "Check if file path is within root directory.
+  Returns true if file-path starts with root-path (prevents path traversal attacks)."
+  [root-path file-path]
+  (.startsWith file-path root-path))
+
+(defn validate-path!
+  "Validate that requested-file is within root-dir.
+  Throws SecurityException if path traversal is detected.
+  Returns the canonical path of the requested file if valid."
+  [root-dir requested-file]
+  (let [root-canonical (canonical-path root-dir)
+        file-canonical (canonical-path requested-file)]
+    (when-not (path-within-root? root-canonical file-canonical)
+      (throw (SecurityException. "Path traversal attempt detected")))
+    file-canonical))
+
+(defn safe-file
+  "Create a File object safely by validating it's within root-dir.
+  Throws SecurityException if path traversal is detected.
+  Returns the validated File object."
+  [root-dir path]
+  (let [file (io/file root-dir path)]
+    (validate-path! root-dir file)
+    file))
