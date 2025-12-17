@@ -6,7 +6,7 @@
  :contact-email                            "email@example.com" ; will be used raw
  :github-url                               "https://github.com"
  :twitter-url                              "https://twitter.com"
- :links                                    [{:link-name "GitHub" :link-url "{{twitter-url}}"}
+ :links                                    [{:link-name "GitHub" :link-url "{{github-url}}"}
                                             {:link-name "Twitter" :link-url "{{twitter-url}}"}]
  :additional-header-content                nil
  :post-additional-header-content-templates nil              ; these are mapped rendered and used raw
@@ -30,4 +30,11 @@
  :navbar-sections                          [;["/" "Home"]
                                             ["/about.html" "About"]
                                             ["/contact.html" "Contact"]]
+
+ ;; CGI-bin executable file patterns (security: only matching files will be made executable)
+ ;; Supports:
+ ;;   - Exact filenames: "my-script"
+ ;;   - Extensions: "*.sh", "*.cgi", "*.bb"
+ ;;   - Wildcards: "*" (allows all files - use with caution!)
+ :cgi-bin-executable-patterns             ["*.cgi" "*.sh" "*.bb"]
  }

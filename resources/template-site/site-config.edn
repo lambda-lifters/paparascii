@@ -6,7 +6,7 @@
  :contact-email                  "email@example.com"
  :github-url                     "https://github.com/example"
  :twitter-url                    "https://twitter.com/example"
- :links                          [{:link-name "GitHub" :link-url "{{twitter-url}}"}
+ :links                          [{:link-name "GitHub" :link-url "{{github-url}}"}
                                   {:link-name "Twitter" :link-url "{{twitter-url}}"}]
  :additional-header-content      nil
  :post-additional-header-content nil
