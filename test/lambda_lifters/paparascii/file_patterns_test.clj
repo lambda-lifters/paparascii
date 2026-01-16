@@ -117,15 +117,3 @@
       (is (not (fp/should-be-executable? "malware.exe" default-patterns))
           "Default should reject executables"))))
 
-(defn run-all-tests []
-  (println "\n🧪 Running File Pattern Validation Tests\n")
-  (let [results (run-tests 'lambda-lifters.paparascii.file-patterns-test)]
-    (println "\n📊 Test Summary:")
-    (println "  Tests run:" (:test results))
-    (println "  Assertions:" (:pass results))
-    (println "  Failures:" (:fail results))
-    (println "  Errors:" (:error results))
-    (if (and (zero? (:fail results)) (zero? (:error results)))
-      (println "\n✅ All tests passed! File pattern validation is working correctly.")
-      (println "\n❌ Some tests failed. Check output above."))
-    results))

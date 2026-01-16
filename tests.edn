@@ -1,0 +1,17 @@
+#kaocha/v1
+{:tests [{:id :unit
+          :test-paths ["test"]}]
+
+ ;; Use multiple reporters: documentation for output, custom for skip counts
+ :reporter [kaocha.report/documentation
+            kaocha.reporter.with-skip-count/report]
+
+ ;; Plugins
+ :plugins [:kaocha.plugin/profiling]
+
+ :color? true
+ :fail-fast? false
+ :randomize? false
+
+ ;; Configure capture output
+ :capture-output? false}

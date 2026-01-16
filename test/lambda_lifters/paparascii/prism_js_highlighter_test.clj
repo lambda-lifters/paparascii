@@ -60,15 +60,3 @@
           "Same highlighter should reuse its engine instance")
       (println "✅ Engine caching per instance working correctly"))))
 
-(defn run-all-tests []
-  (println "\n🧪 Running GraalVM JS Migration Tests\n")
-  (let [results (run-tests 'lambda-lifters.paparascii.prism-js-highlighter-test)]
-    (println "\n📊 Test Summary:")
-    (println "  Tests run:" (:test results))
-    (println "  Assertions:" (:pass results))
-    (println "  Failures:" (:fail results))
-    (println "  Errors:" (:error results))
-    (if (and (zero? (:fail results)) (zero? (:error results)))
-      (println "\n✅ All tests passed! GraalVM JS is working correctly.")
-      (println "\n❌ Some tests failed. Check output above."))
-    results))

@@ -11,9 +11,13 @@
 
 (defn path-within-root?
   "Check if file path is within root directory.
-  Returns true if file-path starts with root-path (prevents path traversal attacks)."
+  Returns true if file-path is exactly root-path or starts with root-path followed by separator."
   [root-path file-path]
-  (.startsWith file-path root-path))
+  (let [root-normalized (if (or (.endsWith root-path "/") (.endsWith root-path "\\"))
+                          root-path
+                          (str root-path File/separator))]
+    (or (= file-path root-path)
+        (.startsWith file-path root-normalized))))
 
 (defn validate-path!
   "Validate that requested-file is within root-dir.
