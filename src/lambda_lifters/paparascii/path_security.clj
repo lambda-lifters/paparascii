@@ -30,11 +30,27 @@
       (throw (SecurityException. "Path traversal attempt detected")))
     file-canonical))
 
+(defn detect-suspicious-patterns
+  "Check for suspicious patterns in path string that might indicate traversal attempts.
+  Throws SecurityException if suspicious patterns are detected."
+  [path]
+  (let [path-str (if (instance? File path) (.getPath ^File path) (str path))]
+    ;; Normalize separators to forward slashes for consistent checking
+    (let [normalized (.replace path-str "\\" "/")]
+      ;; Check for parent directory references
+      (when (or (.contains normalized "../")
+                (.contains normalized "..")
+                ;; Check for multiple dots that might be obfuscation attempts
+                (re-find #"\.\.\.\." normalized))
+        (throw (SecurityException. "Suspicious path pattern detected"))))))
+
 (defn safe-file
   "Create a File object safely by validating it's within root-dir.
   Throws SecurityException if path traversal is detected.
   Returns the validated File object."
   [root-dir path]
+  ;; First check for suspicious patterns in the input path
+  (detect-suspicious-patterns path)
   (let [file (io/file root-dir path)]
     (validate-path! root-dir file)
     file))
