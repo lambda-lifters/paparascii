@@ -1,5 +1,6 @@
 (ns lambda-lifters.paparascii.file-patterns
   "Utilities for matching files against patterns using Java NIO glob patterns"
+  (:require [clojure.string :as str])
   (:import (java.nio.file FileSystems)))
 
 (defn matches-pattern?
@@ -34,10 +35,10 @@
     true if the filename matches at least one pattern, false otherwise
 
   Examples:
-    (matches-any-pattern? \"script.sh\" [\"*.sh\" \"*.cgi\"]) => true
+    (matches-any-pattern? \"script.sh\" [\"*.sh\" \"*.cgi\"]) => \"*.sh\"
     (matches-any-pattern? \"test.py\" [\"*.sh\" \"*.cgi\"])   => false"
   [filename patterns]
-  (boolean (some #(matches-pattern? filename %) patterns)))
+  (some #(matches-pattern? filename %) patterns))
 
 (defn filename-from-path
   "Extract just the filename from a file path.
@@ -46,7 +47,7 @@
     (filename-from-path \"scripts/my-script.sh\") => \"my-script.sh\"
     (filename-from-path \"my-script\")            => \"my-script\""
   [path]
-  (last (clojure.string/split path #"[/\\\\]")))
+  (last (str/split path #"[/\\\\]")))
 
 (defn should-be-executable?
   "Determine if a file should be made executable based on configured patterns.
@@ -61,7 +62,6 @@
   Security Note:
     Returns false if patterns is nil or empty (secure by default)"
   [file-path patterns]
-  (if (and patterns (seq patterns))
-    (let [filename (filename-from-path file-path)]
-      (matches-any-pattern? filename patterns))
-    false))
+  (and patterns
+       (seq patterns)
+       (matches-any-pattern? (filename-from-path file-path) patterns)))

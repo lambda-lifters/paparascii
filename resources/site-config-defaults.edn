@@ -37,4 +37,10 @@
  ;;   - Extensions: "*.sh", "*.cgi", "*.bb"
  ;;   - Wildcards: "*" (allows all files - use with caution!)
  :cgi-bin-executable-patterns             ["*.cgi" "*.sh" "*.bb"]
+
+ ;; AsciiDoc Security Settings
+ ;; :asciidoc-allow-passthroughs? - Allow passthrough blocks (++++, pass:[]) in AsciiDoc content
+ ;;   - false (default, recommended): Blocks passthroughs for XSS protection (SafeMode.SECURE)
+ ;;   - true: Allows passthroughs if you control all content (SafeMode.SAFE)
+ :asciidoc-allow-passthroughs?            false
  }

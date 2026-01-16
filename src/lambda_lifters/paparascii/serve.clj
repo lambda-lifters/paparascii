@@ -2,7 +2,8 @@
   (:require [lambda-lifters.paparascii.site :as site]
             [lambda-lifters.paparascii.path-security :as path-sec]
             [clojure.string :as str]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log])
   (:import (com.sun.net.httpserver HttpHandler HttpServer)
            (java.io File)
            (java.net InetSocketAddress)
@@ -42,15 +43,16 @@
   "Serve a static file with path traversal protection"
   [exchange ^String root-dir ^String path]
   (try
-    ;; First validation: check initial requested path
-    (let [requested-file (io/file root-dir path)
+    ;; Strip leading slash to make path relative
+    (let [relative-path (if (str/starts-with? path "/") (subs path 1) path)
+          requested-file (io/file root-dir relative-path)
           _ (path-sec/validate-path! root-dir requested-file)
 
           ;; Handle directory index files
-          path (if (and (.isDirectory requested-file) (.endsWith path "/"))
-                 (str path "index.html")
-                 path)
-          file (io/file root-dir path)]
+          relative-path (if (and (.isDirectory requested-file) (str/ends-with? relative-path "/"))
+                          (str relative-path "index.html")
+                          relative-path)
+          file (io/file root-dir relative-path)]
 
       ;; Second validation: re-check after potential index.html append
       (path-sec/validate-path! root-dir file)
@@ -70,7 +72,7 @@
 
     (catch SecurityException e
       ;; Path traversal attempt detected
-      (println "⚠️  Security: Path traversal blocked:" path)
+      (log/warn "Security: Path traversal blocked:" path)
       (.sendResponseHeaders exchange 403 0)
       (.close (.getResponseBody exchange)))))
 
@@ -79,23 +81,28 @@
   [root-dir]
   (reify HttpHandler
     (handle [_ exchange]
-      (let [path (.getPath (.getRequestURI exchange))
-            path (if (= "/" path) "/index.html" path)]
-        (serve-file exchange root-dir path)))))
+      (try
+        (let [path (.getPath (.getRequestURI exchange))
+              path (if (= "/" path) "/index.html" path)]
+          (serve-file exchange root-dir path))
+        (catch Exception e
+          (log/error e "Error handling request")
+          (.sendResponseHeaders exchange 500 0)
+          (.close (.getResponseBody exchange)))))))
 
 (defn start-server
   "Start HTTP server using Java's built-in HttpServer"
   [{:keys [port dir] :or {port 8000 dir (site/public-html-path)}}]
-  (println "\n🌐 Starting HTTP server...")
-  (println (str "📁 Serving from: " dir))
-  (println (str "🔗 URL: http://localhost:" port))
-  (println "⏹️  Press Ctrl+C to stop\n")
+  (log/info "Starting HTTP server...")
+  (log/info (str "Serving from: " dir))
+  (log/info (str "URL: http://localhost:" port))
+  (log/info "Press Ctrl+C to stop")
 
   (let [server (HttpServer/create (InetSocketAddress. port) 0)]
     (.createContext server "/" (create-handler dir))
     (.setExecutor server nil)
     (.start server)
-    (println "Server started successfully!")
+    (log/info "Server started successfully!")
 
     ;; Keep the server running
     @(promise)))

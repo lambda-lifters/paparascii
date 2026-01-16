@@ -2,7 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [hashp.preload]
             [lambda-lifters.lambda-liftoff.io :as ll-io]
             [lambda-lifters.lambda-liftoff.zip-fetch :as zf]
             [lambda-lifters.paparascii.adoc :as adoc]
@@ -13,7 +12,7 @@
             [lambda-lifters.paparascii.site-layout :as layout]
             [lambda-lifters.paparascii.util :as u]
             [selmer.parser :as selmer])
-  (:import (java.io File)))
+  (:import (java.io File IOException)))
 
 (defn copy-resources!
   "Copy all static resources to TARGET/public_html"
@@ -56,12 +55,13 @@
   "Copy the current Babashka executable to TARGET/bin/"
   []
   (log/info "Copying Babashka executable...")
-  (let [bb-path (first (filter #(.exists (io/file %))
+  (let [home (System/getenv "HOME")
+        bb-path (first (filter #(.exists (io/file %))
                                ["/usr/local/bin/bb"
                                 "/usr/bin/bb"
                                 "/opt/homebrew/bin/bb"
-                                (str (System/getenv "HOME") "/.nix-profile/bin/bb")
-                                (str (System/getenv "HOME") "/bin/bb")]))]
+                                (str home "/.nix-profile/bin/bb")
+                                (str home "/bin/bb")]))]
     (if bb-path
       (do
         (log/info "copy from" bb-path)
@@ -78,9 +78,10 @@
     (ll-io/ensure-directory (site/target-path dir))))
 
 (defn site-page-html [content file]
-  (let [content (selmer/render content @site/*site-config)
-        header (adoc/parse-asciidoc-header content)]
-    [header (layout/site-page-layout @site/*site-config header (adoc/asciidoc-to-html content file))]))
+  (let [site-config @site/*site-config
+        content (selmer/render content site-config)
+        header (adoc/parse-asciidoc-header content file site-config)]
+    [header (layout/site-page-layout site-config header (adoc/asciidoc-to-html content file site-config))]))
 
 (defn process-site-page!
   "Process a single site page (about, contact, etc.)"
@@ -106,11 +107,13 @@
         (doall (map #(process-site-page! (.getPath %)) ascii-doc-files))))))
 
 (defn blog-post-html [content file]
-  (let [page-meta (adoc/parse-asciidoc-header content)
+  (let [site-config @site/*site-config
+        page-meta (adoc/parse-asciidoc-header content file site-config)
         [html-content additional-css]
         (binding [highlighter/additional-header-css nil]
-          [(adoc/asciidoc-to-html content file) highlighter/additional-header-css])]
-    [(layout/blog-post-layout @site/*site-config page-meta html-content additional-css) page-meta]))
+          [(adoc/asciidoc-to-html content file site-config) highlighter/additional-header-css])]
+    {:output    (layout/blog-post-layout site-config page-meta html-content additional-css)
+     :page-meta page-meta}))
 
 (defn process-blog-post!
   "Process a single blog post file"
@@ -122,24 +125,16 @@
         output-file (site/public-html-path "blog" output-file-name)]
     (log/info output-file-name)
     (io/make-parents output-file)
-    (let [[output page-meta] (blog-post-html content file)]
+    (let [{:keys [output page-meta]} (blog-post-html content file)]
       (spit output-file output)
       {:file basename :page-meta page-meta})))
-
-(defn tag-index-html [tag posts]
-  (let [sorted-posts (->> posts
-                          (filter #(some #{tag} (get-in % [:page-meta :tags])))
-                          (sort-by #(get-in % [:page-meta :date]))
-                          reverse)]
-    [(layout/tag-index-layout @site/*site-config tag sorted-posts) (count sorted-posts)]))
 
 (defn generate-tag-index!
   "Generate an index page for a specific tag"
   [tag posts]
-  (let [tag-slug (u/slugify tag)
-        html-file-name (str tag-slug ".html")
+  (let [html-file-name (str (u/slugify tag) ".html")
         output-file (site/public-html-path "blog" "tags" html-file-name)
-        [html n-tag-posts] (tag-index-html tag posts)]
+        {:keys [html n-tag-posts]} (layout/tag-index-html @site/*site-config tag posts)]
     (log/info "generating tag index " (str "blog/tags/" html-file-name) "(" n-tag-posts "posts)")
     (io/make-parents output-file)
     (spit output-file html)))
@@ -173,8 +168,13 @@
   The first thing you’ll need to do is download a copy of Font Awesome.
   The HTML converter currently integrates with Font Awesome 4, so make sure you’re using that version."
   []
-  (zf/fetch-and-unzip "https://fontawesome.com/v4/assets/font-awesome-4.7.0.zip"
-                      :file-name-mapping (partial font-awesome-file-name-mapping (site/public-html-path))))
+  (try
+    (zf/fetch-and-unzip "https://fontawesome.com/v4/assets/font-awesome-4.7.0.zip"
+                        :file-name-mapping (partial font-awesome-file-name-mapping (site/public-html-path)))
+    (catch IOException ioe (log/error
+                             "could not download fontawesome... due to IO (probably network issues) awesomeness will be degraded:"
+                             (class ioe) ":"
+                             (ex-message ioe)))))
 
 (defn build! [& {:keys [parallel?] :or {parallel? true}}]
   (log/info "Building Static Blog")
@@ -191,7 +191,7 @@
   (copy-babashka!)
 
   (log/debug "realising AsciiDoctor")
-  (deref adoc/*asciidoctor)
+  (adoc/the-doctor)
 
   ;; Process site pages (about, contact, etc.)
   (log/info "Processing site pages")

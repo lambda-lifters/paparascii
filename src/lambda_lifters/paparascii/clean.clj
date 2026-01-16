@@ -1,6 +1,7 @@
 (ns lambda-lifters.paparascii.clean
   (:require [clojure.tools.logging :as log]
-            [lambda-lifters.paparascii.site :as site]))
+            [lambda-lifters.paparascii.site :as site])
+  (:import (java.io File)))
 
 (defn clean-target!
   "Clean the TARGET directory completely"
@@ -8,9 +9,5 @@
   (log/info "Cleaning TARGET directory...")
   (let [target (site/target-file)]
     (when (.exists target)
-      (doseq [file (file-seq target)
-              :when (.isFile file)]
-        (.delete file))
-      (doseq [dir (reverse (file-seq target))
-              :when (.isDirectory dir)]
-        (.delete dir)))))
+      (->> target file-seq (filter File/.isFile) (map File/.delete) dorun)
+      (->> target file-seq reverse (filter File/.isDirectory) (map File/.delete) dorun))))

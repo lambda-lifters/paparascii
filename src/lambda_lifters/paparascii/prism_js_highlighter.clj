@@ -1,6 +1,5 @@
 (ns lambda-lifters.paparascii.prism-js-highlighter
   (:require [clojure.java.io :as io]
-            [hashp.preload]
             [hiccup2.core :as h])
   (:import (java.io File FileOutputStream IOException)
            (javax.script ScriptContext ScriptEngineManager ScriptException)
@@ -8,6 +7,8 @@
            (org.asciidoctor.ast Document)
            (org.asciidoctor.extension LocationType)
            (org.asciidoctor.syntaxhighlighter Formatter HighlightResult Highlighter StylesheetWriter SyntaxHighlighterAdapter)))
+
+#_((requiring-resolve 'hashp.install/install!))
 
 ;; Derived from: https://docs.asciidoctor.org/asciidoctorj/latest/syntax-highlighting/syntax-highlighter/
 ;; Notably: https://docs.asciidoctor.org/asciidoctorj/latest/syntax-highlighting/static-during-conversion/
@@ -64,10 +65,11 @@
           bindings (doto (.getBindings ^ScriptContext ctx ScriptContext/ENGINE_SCOPE)
                      (.put "text" source)
                      (.put "language" lang))
-          script "Prism.highlight(text, Prism.languages[language], language)"]
+          ;; Check if language exists, fall back to plain text if not
+          script "Prism.languages[language] ? Prism.highlight(text, Prism.languages[language], language) : text"]
       (try
         (HighlightResult. (.eval engine script bindings))
-        (catch ScriptException e (throw (ex-info "exception raised running highlight script" {:script script} e))))))
+        (catch ScriptException e (throw (ex-info "exception raised running highlight script" {:script script :language lang} e))))))
 
   StylesheetWriter
   (isWriteStylesheet [_ document] (write-stylesheet? document))

@@ -1,4 +1,4 @@
-(ns lambda-lifters.paparascii.layout
+(ns lambda-lifters.paparascii.hiccup-layout
   (:require [hiccup2.core :as h]))
 
 (def doctype (h/raw "<!DOCTYPE html>"))
@@ -23,6 +23,7 @@
    [:link {:rel "stylesheet" :href (:icon-css bootstrap)}]
    [:link {:rel "stylesheet" :href "/css/font-awesome.css"}]
    [:link {:rel "stylesheet" :href "/css/page-style.css"}]
+   [:link {:rel "stylesheet" :href "/css/paparascii-generated.css"}]
    more-raw-header])
 
 (defn navbar-section-layout [[href content]]
@@ -36,9 +37,8 @@
     [:a.navbar-brand {:href "/"} site-name]
     [:button.navbar-toggler {:type "button" :data-bs-toggle "collapse" :data-bs-target "#navbarNav"}
      [:span.navbar-toggler-icon]]
-    [:div.collapse.navbar-collapse#navbarNav
-     [:ul.navbar-nav.ms-auto
-      (map navbar-section-layout navbar-sections)]]]])
+    [:div#navbarNav.collapse.navbar-collapse
+     [:ul.navbar-nav.ms-auto (map navbar-section-layout navbar-sections)]]]])
 
 (defn html-template-body-layout [site-name navbar-sections content]
   [:body
@@ -72,11 +72,7 @@
     [:script (assoc (:script bootstrap) :crossorigin "anonymous")]))
 
 (defn html-template-layout [head body footer]
-  (h/html doctype
-          [:html {:lang "en"}
-           head
-           body
-           footer]))
+  (h/html doctype [:html {:lang "en"} head body footer]))
 
 (defn tag-anchor-layout [url tag] [:a.tag {:href url} tag])
 

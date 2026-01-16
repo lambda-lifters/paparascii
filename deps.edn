@@ -1,19 +1,19 @@
 {:paths       ["src" "resources"]
- :deps        {org.clojure/clojure              {:mvn/version "1.12.2"}
-               org.asciidoctor/asciidoctorj     {:mvn/version "3.0.0"}
+ :deps        {org.clojure/clojure              {:mvn/version "1.12.3"}
+               org.asciidoctor/asciidoctorj     {:mvn/version "3.0.1"}
                ;; https://mvnrepository.com/artifact/org.asciidoctor/asciidoctorj-diagram
-               org.asciidoctor/asciidoctorj-diagram {:mvn/version "3.0.1"}
+               org.asciidoctor/asciidoctorj-diagram {:mvn/version "3.1.0"}
                hiccup/hiccup {:mvn/version "2.0.0"}
-               io.github.clojure/tools.build {:mvn/version "0.10.10"}
+               io.github.clojure/tools.build {:mvn/version "0.10.11"}
                ;; GraalVM JavaScript engine (replaces deprecated Nashorn)
-               org.graalvm.polyglot/polyglot {:mvn/version "24.1.1"}
-               org.graalvm.polyglot/js {:mvn/version "24.1.1" :extension "pom"}
-               org.graalvm.js/js-scriptengine {:mvn/version "24.1.1"}
-               org.clojure/tools.cli {:mvn/version "1.1.230"}
-               dev.weavejester/hashp {:mvn/version "0.4.0"}
-               selmer/selmer {:mvn/version "1.12.62"}
+               org.graalvm.polyglot/polyglot {:mvn/version "25.0.1"}
+               org.graalvm.polyglot/js {:mvn/version "25.0.1" :extension "pom"}
+               org.graalvm.js/js-scriptengine {:mvn/version "25.0.1"}
+               org.clojure/tools.cli {:mvn/version "1.2.245"}
+               dev.weavejester/hashp {:mvn/version "0.5.1"}
+               selmer/selmer {:mvn/version "1.12.69"}
                lambda-lifters/lambda-liftoff {:git/url "https://github.com/lambda-lifters/lambda-liftoff.git"
-                                              :git/sha "a3ef2c426d366ca414688dd521f66da214e5eb26"}
+                                              :git/sha "26a0ef23574c4ce4176b93c17911f170c43ac713"}
                org.clojure/tools.logging {:mvn/version "1.3.0"}
                org.slf4j/slf4j-simple {:mvn/version "2.1.0-alpha1"}
                }
@@ -27,8 +27,13 @@
 
  :aliases
  {;; Run with clj -T:build function-in-build
-  :build {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.10"}}
-          :ns-default build
-          }}
+  :build {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.11"}}
+          :ns-default build}
+
+  ;; Run tests with: clj -M:test
+  :test  {:extra-paths ["test"]
+          :extra-deps  {lambdaisland/kaocha {:mvn/version "1.91.1392"}}
+          :main-opts   ["-m" "kaocha.runner"]}
+  }
 
  }
