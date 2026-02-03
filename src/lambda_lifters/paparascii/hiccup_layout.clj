@@ -80,8 +80,9 @@
   [:div.blog-post.col-md-4
    [:h3 [:a {:href url} title]]
    [:div.blog-meta
-    [:i.bi.bi-calendar] &nbsp date " " &middot " "
-    [:i.bi.bi-person] &nbsp author]
+    (when date (list [:i.bi.bi-calendar] &nbsp date))
+    (when (and date author) (list " " &middot " "))
+    (when author (list [:i.bi.bi-person] &nbsp author))]
    (when maybe-description [:p maybe-description])
    (when (seq maybe-tag-anchors) [:div.tags maybe-tag-anchors])])
 
