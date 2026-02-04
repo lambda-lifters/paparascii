@@ -1,5 +1,6 @@
 (ns lambda-lifters.paparascii.util
-  (:require [clojure.string :as str])
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str])
   (:import (java.text Normalizer Normalizer$Form)))
 
 (defn string-replace* [s & re-replacement-tuples]
@@ -21,3 +22,8 @@
        [#"\s+" "-"]                                        ; Replace spaces with hyphens
        [#"-+" "-"]                                         ; Replace multiple hyphens with single
        #"^-|-$")))                                         ; Remove leading/trailing hyphens
+
+(defn slugify-file
+  "Converts the basename of a file name to a slug"
+  [file]
+  (-> file io/file .getName (str/replace #"\.[^.]*$" "") slugify))

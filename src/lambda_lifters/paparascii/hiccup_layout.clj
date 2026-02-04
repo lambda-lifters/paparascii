@@ -86,18 +86,19 @@
    (when maybe-description [:p maybe-description])
    (when (seq maybe-tag-anchors) [:div.tags maybe-tag-anchors])])
 
-(defn index-content-layout [welcome site-lead posts {:keys [title text] :as site-about}]
+(defn index-content-layout [welcome site-lead post-cards {:keys [title text lead-article] :as site-about}]
   (list
     [:div.hero-section
      [:div.container
       [:h1.display-4 welcome]
-      [:p.lead site-lead]]]
+      [:p.lead site-lead]
+      (when lead-article [:div#lead-article lead-article])]]
     [:div.container
      [:div.row
       [:h2.mb-4 "Recent Posts"]
-      (if (empty? posts)
+      (if (empty? post-cards)
         [:div.alert.alert-info "No blog posts yet. Add some .adoc files to the blog directory!"]
-        posts)
+        post-cards)
       (when site-about
         [:div.col-md-4
          [:div.card

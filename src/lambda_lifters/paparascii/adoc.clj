@@ -1,5 +1,6 @@
 (ns lambda-lifters.paparascii.adoc
   (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter])
   (:import (java.util Map)
            (org.asciidoctor Asciidoctor Asciidoctor$Factory Attributes Options SafeMode)
@@ -11,9 +12,9 @@
 (defn the-doctor [& {:keys [reset?]}]
   (when reset? (reset! *asciidoctor nil))
   (swap! *asciidoctor #(or %
-                           (let [doctor (Asciidoctor$Factory/create)]
-                             (highlighter/register-highlighter-with-doctor doctor)
-                             doctor))))
+                           (log/info "Fabricating Asciidoctor")
+                           (doto (Asciidoctor$Factory/create)
+                             highlighter/register-highlighter-with-doctor))))
 
 (defn make-attributes [highlighter-name allow-passthroughs?]
   (cond-> {
@@ -32,10 +33,6 @@
 
 (defn- build-asciidoctor-options
   "Build AsciidoctorJ options based on site configuration.
-
-   Parameters:
-     site-config - Site configuration map (optional)
-
    Security:
      Disables passthrough content (++++, pass:[]) by default for XSS protection.
      If :asciidoc-allow-passthroughs? is true, passthroughs are allowed."
@@ -64,12 +61,11 @@
 
 (defn asciidoc-to-html
   "Convert AsciiDoc to HTML using AsciidoctorJ
-
    Parameters:
      content - AsciiDoc content string
      file - File path (optional, for context)
      site-config - Site configuration map (optional, for security settings)"
-  [content & [file site-config]]
+  [content & [site-config]]
   (let [allow-passthroughs? (get site-config :asciidoc-allow-passthroughs? false)
         ;; Strip passthrough blocks if not allowed
         content (if allow-passthroughs? content (sanitize-html content))
@@ -83,7 +79,7 @@
      content - AsciiDoc content string
      file - File path (optional, for context)
      site-config - Site configuration map (optional, for security settings)"
-  [content & [file site-config]]
+  [content & [site-config]]
   (let [options (build-asciidoctor-options site-config)]
     (into {}
           (map (juxt (comp keyword clojure.string/lower-case key) val))
@@ -92,7 +88,6 @@
 
 (defn asciidoc-to-preamble-html
   "Converts only the preamble to HTML
-
    Parameters:
      content - AsciiDoc content string
      file - File path (optional, for context)
@@ -141,9 +136,9 @@
      site-config - Site configuration map (optional, for security settings)"
   [content & [file site-config]]
   (let [document-metadata (get-document-metadata content file site-config)
-        allow-passthroughs? (get site-config :asciidoc-allow-passthroughs? false)]
-    {:title       (get document-metadata :doctitle "Untitled")
-     :author      (get document-metadata :author "Anonymous")
+        allow-passthroughs? (:asciidoc-allow-passthroughs? site-config false)]
+    {:title       (:doctitle document-metadata "Untitled")
+     :author      (:author document-metadata "Anonymous")
      :date        (:date document-metadata)
      :description (or (:description document-metadata)
                       (if allow-passthroughs?

@@ -4,7 +4,8 @@
             [lambda-lifters.paparascii.init :as init]
             [lambda-lifters.paparascii.list-posts :as list-posts]
             [lambda-lifters.paparascii.new-post :as new-post]
-            [lambda-lifters.paparascii.serve :as serve]))
+            [lambda-lifters.paparascii.serve :as serve]
+            [clojure.main :as main]))
 
 ;; Tool entry points
 (defn clean
@@ -36,3 +37,20 @@
   "Initialise a new blog"
   [& {:as args}]
   (init/init! args))
+
+(defn paparascii-reload
+  "Reload all paparascii namespaces (for local development)"
+  []
+  (require 'lambda-lifters.paparascii.tool :reload-all)
+  (println "Reloaded paparascii namespaces"))
+
+(defn repl
+  "Start an interactive REPL with all tool functions available"
+  [& {:as _args}]
+  (println "paparascii REPL")
+  (println "Available: (build) (serve) (clean) (init) (new-post) (list-posts)")
+  (println "           (paparascii-reload) - reload source for development")
+  (println "")
+  (in-ns 'user)
+  (refer 'lambda-lifters.paparascii.tool)
+  (main/repl))

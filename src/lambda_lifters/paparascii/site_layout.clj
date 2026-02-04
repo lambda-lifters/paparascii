@@ -49,13 +49,15 @@
 
 (defn tag-anchor [tag] (layout/tag-anchor-layout (tag-url tag) tag))
 
-(defn index-entry-for-post [{:keys [file] :as _post} {:keys [title date author description tags] :as _meta}]
-  (layout/index-entry-for-post-layout (blog-url file) title date author description (map tag-anchor tags)))
+(defn index-entry-for-post [{:keys [slug] :as _post} {:keys [title date author description tags] :as _meta}]
+  (layout/index-entry-for-post-layout (blog-url slug) title date author description (map tag-anchor tags)))
 
-(defn index-content [{:keys [site-lead site-about index-welcome-template about-card-title] :as site-config} posts]
+(defn index-content [{:keys [site-lead site-about index-welcome-template about-card-title lead-article] :as site-config} posts]
   (let [rendered-posts (map #(index-entry-for-post % (:page-meta %))
                             (reverse (sort-by (comp :date :page-meta) posts)))
-        about-card (when site-about {:text (raw site-about), :title (raw about-card-title)})]
+        about-card (when site-about {:text (raw site-about)
+                                     :title (raw about-card-title)
+                                     :lead-article (raw lead-article)})]
     (layout/index-content-layout (raw (render index-welcome-template site-config)) (raw site-lead) rendered-posts about-card)))
 
 (defn index-layout [{:keys [site-description index-title-template] :as site-config} posts]
@@ -113,9 +115,8 @@
        :description (list "All blog posts tagged with " [:q tag] "")
        :content     content})))
 
-(defn tag-index-html [config tag posts]
-  (let [sorted-posts (->> posts
-                          (filter #(some #{tag} (get-in % [:page-meta :tags])))
+(defn tag-index-html [config tag matching-posts]
+  (let [sorted-posts (->> matching-posts
                           (sort-by #(get-in % [:page-meta :date]))
                           reverse)]
     {:html        (tag-index-layout config tag sorted-posts)
