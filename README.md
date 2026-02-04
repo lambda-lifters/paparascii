@@ -1,4 +1,6 @@
-# Ascii Blog
+<img src="resources/images/paparascii.svg" alt="Paparascii" width="120">
+
+# Paparascii
 
 A fast, modern static site generator built with Clojure.
 
