@@ -75,7 +75,7 @@
                      :description "Test description"
                      :content [:div "Content here"]
                      :additional-head []}
-          result (layout/html-template site-config page-meta)]
+          result (layout/html-template page-meta site-config)]
       ;; Result should be hiccup that can be converted to string
       (is (some? result)))))
 
@@ -98,7 +98,7 @@
                      :content [:div "Content"]
                      ;; INTENTIONALLY allow scripts in additional-head
                      :additional-head ["<script>console.log('custom');</script>"]}
-          result (layout/html-template site-config page-meta)
+          result (layout/html-template page-meta site-config)
           html-str (str result)]
       ;; These scripts SHOULD appear literally (not escaped) - they're intentional
       (is (str/includes? html-str "<script>console.log('analytics');</script>"))
@@ -123,7 +123,7 @@
                      :description "<script>alert('desc')</script>"
                      :content [:div "Normal content"]
                      :additional-head []}
-          result (layout/html-template site-config page-meta)
+          result (layout/html-template page-meta site-config)
           html-str (str result)]
       ;; These should be escaped (metadata description goes in meta tag)
       ;; We're checking that user data doesn't create executable scripts
@@ -149,7 +149,7 @@
           page-meta {:title "Test"
                      :content [:div "Content"]
                      :additional-head []}
-          result (layout/html-template site-config page-meta)]
+          result (layout/html-template page-meta site-config)]
       ;; Site owner HTML should work (they control their own site)
       (is (some? result)))))
 

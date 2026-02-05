@@ -2,41 +2,47 @@
   (:require [clojure.pprint :as pp]
             [clojure.tools.logging :as log]
             [lambda-lifters.lambda-liftoff.io :as ll-io]
-            [lambda-lifters.paparascii.site :as site])
-  (:import (java.nio.file Path)))
+            [lambda-lifters.paparascii.file-system :as fs]
+            [lambda-lifters.paparascii.site :as site]))
+
+(def seed-directories ["blog"
+                       "site"
+                       "resources"
+                       "assets/css"
+                       "assets/js"
+                       "assets/img"
+                       "assets/media"
+                       "assets/fonts"
+                       "templates"
+                       ".github/workflows"])
+
+(def seed-config {:site-name      name
+                  :copyright-date "2024"
+                  :contact-email  "email@example.com"
+                  :site-lead      "Welcome to my blog"
+                  :site-about     "A blog about interesting things"
+                  :links          [{:link-name "GitHub" :link-url "https://github.com"}
+                                   {:link-name "Twitter" :link-url "https://twitter.com"}]})
 
 (defn init!
   "Initialize a new site with basic structure"
   [& {:keys [name] :or {name "My Blog"}}]
   (log/info "Initializing new site: " name)
-  (let [config {:site-name      name
-                :copyright-date "2024"
-                :contact-email  "email@example.com"
-                :site-lead      "Welcome to my blog"
-                :site-about     "A blog about interesting things"
-                :links          [{:link-name "GitHub" :link-url "https://github.com"}
-                                 {:link-name "Twitter" :link-url "https://twitter.com"}]}]
+  (let [config seed-config]
     (log/info "Create directories")
-    (doseq [dir ["blog"
-                 "site"
-                 "resources"
-                 "assets/css"
-                 "assets/js"
-                 "assets/img"
-                 "assets/media"
-                 "assets/fonts"
-                 "templates"
-                 ".github/workflows"]]
-      (ll-io/ensure-directory dir))
+    (dorun (->> seed-directories
+                (map ll-io/ensure-directory)))
     (log/info "Create site-config.edn")
-    (spit "site-config.edn" (with-out-str (pp/pprint config)))
+    (-> (with-out-str (pp/pprint config))
+        (spit "site-config.edn"))
     (log/info "Copy default templates from resources")
     (when-let [template-site (ll-io/resource-path "template-site")]
-      (doseq [template-file (file-seq (.toFile template-site))
-              :when (.isFile template-file)]
-        (let [relative-file (.toFile (Path/.relativize template-site (.toPath template-file)))
-              destination-file (site/site-path relative-file)]
-          (ll-io/copy-file template-file destination-file))))
+      (let [transpose-template-to-site #(ll-io/copy-file % (fs/transpose-file template-site site/site-path %))]
+        (dorun (->> template-site
+                    .toFile
+                    file-seq
+                    (filter .isFile)
+                    (map transpose-template-to-site)))))
     (when-let [workflow-template (ll-io/resource-path "template-github-workflow-build-and-deploy.yml")]
       (log/info "Copy GitHub workflow")
       (ll-io/copy-file (.toFile workflow-template)

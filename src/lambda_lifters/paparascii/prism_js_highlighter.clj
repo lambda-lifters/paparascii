@@ -1,5 +1,6 @@
 (ns lambda-lifters.paparascii.prism-js-highlighter
   (:require [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [hiccup2.core :as h])
   (:import (java.io File FileOutputStream IOException)
            (javax.script ScriptContext ScriptEngineManager ScriptException)
@@ -19,7 +20,9 @@
 (defonce highlighter-name "prismjs")
 
 (defn write-stylesheet? [doc]
-  (and (instance? Document doc) (.hasAttribute doc "linkcss") (.hasAttribute doc "copycss")))
+  (and (instance? Document doc)
+       (.hasAttribute doc "linkcss")
+       (.hasAttribute doc "copycss")))
 
 (defn prism-css-string []
   (let [rsrc "prismjs/prism.css"]
@@ -37,13 +40,9 @@
         engine-factory (.getFactory script-engine)
         rsrc "prismjs/prism.js"]
     ;; Log which engine is being used for verification
-    (println "🔧 JavaScript engine:"
-             (.getEngineName engine-factory)
-             "version:"
-             (.getEngineVersion engine-factory))
+    (log/info "JavaScript engine: " (.getEngineName engine-factory) " version: " (.getEngineVersion engine-factory))
     (try
-      (with-open [rdr (io/reader (io/resource rsrc))]
-        (.eval script-engine rdr))
+      (with-open [rdr (io/reader (io/resource rsrc))] (.eval script-engine rdr))
       script-engine
       (catch ScriptException e
         (throw (ex-info "exception raised reading script resource" {:resource-path rsrc} e))))))

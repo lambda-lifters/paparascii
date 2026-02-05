@@ -1,35 +1,30 @@
 (ns lambda-lifters.paparascii.list-posts
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+  (:require
+    [lambda-lifters.paparascii.asciidoc.grammar :as g]
+    [lambda-lifters.paparascii.asciidoc.grammar as :g]
+    [clojure.java.io :as io]
+    [clojure.string :as str]))
 
 (defn extract-metadata
   "Extract metadata from an AsciiDoc file"
   [file]
-  (let [content (slurp file)
-        lines (str/split-lines content)
-        get-meta (fn [prefix]
-                   (some #(when (str/starts-with? % prefix)
-                            (str/trim (subs % (count prefix))))
-                         lines))]
-    {:filename (.getName file)
-     :title (get-meta "= ")
-     :author (get-meta ":author:")
-     :date (get-meta ":date:")
-     :description (get-meta ":description:")
-     :tags (when-let [tags (get-meta ":tags:")]
-             (str/split tags #",\s*"))}))
+  (assoc (g/quick-extract-metadata (slurp file))
+    :filename (.getName file)))
 
 (defn format-post-info
   "Format post metadata for display"
   [{:keys [filename title author date description tags]}]
-  (println (str "\n📄 " filename))
-  (when title (println (str "   Title:       " title)))
-  (when author (println (str "   Author:      " author)))
-  (when date (println (str "   Date:        " date)))
-  (when (and description (not (str/blank? description)))
-    (println (str "   Description: " description)))
-  (when (and tags (seq tags))
-    (println (str "   Tags:        " (str/join ", " tags)))))
+  (dorun
+    (->> [(str "📄 " filename)
+          (when title (str "   Title:       " title))
+          (when author (str "   Author:      " author))
+          (when date (str "   Date:        " date))
+          (when (and description (not (str/blank? description)))
+            (str "   Description: " description))
+          (when (and tags (seq tags))
+            (str "   Tags:        " (str/join ", " tags)))]
+         (filter identity)
+         (str/join "\n"))))
 
 (defn list-all-posts
   "List all blog posts with their metadata"
@@ -40,20 +35,19 @@
                               (str/ends-with? (.getName %) ".adoc"))
                         (.listFiles blog-dir)))]
     (if (empty? files)
-      (do (println "\n📭 No blog posts found in blog/ directory")
-          (println "\nCreate your first post with:")
+      (do (println "📭 No blog posts found in blog/ directory")
+          (println "Create your first post with:")
           (println "  bb new-post my-first-post \"My First Post\""))
-      (do (println "\n" (str "=== Blog Posts (" (count files) " total) ==="))
+      (do (println (str "=== Blog Posts (" (count files) " total) ==="))
           (println (apply str (repeat 40 "=")))
-          (let [posts (map extract-metadata files)
-                sorted-posts (reverse (sort-by :date posts))]
-            (doseq [post sorted-posts]
-              (format-post-info post)))
-          (println "\n" (apply str (repeat 40 "=")))
-          (println "\n💡 Tips:")
-          (println "  • Create new post: bb new-post <filename> [\"Title\"]")
-          (println "  • Build website:   bb build")
-          (println "  • Preview locally: bb serve")))))
+          (->> files
+             (map extract-metadata)
+             (sort-by :date)
+             reverse
+             (map format-post-info)
+             (str/join "\n")
+             println)
+          (println (apply str (repeat 40 "=")))))))
 
 (defn -main
   "Main entry point"

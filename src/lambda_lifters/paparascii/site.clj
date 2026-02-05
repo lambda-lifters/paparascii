@@ -17,6 +17,12 @@
   [& parts]
   (apply io/file @*site-dir parts))
 
+(defn existent-site-file
+  "Build a file relative to the site directory, returning nil if it doesn't exist, or the file otherwise"
+  [& parts]
+  (let [f (apply site-file parts)]
+    (when (.exists f) f)))
+
 (defn site-path
   "Build a path relative to the site directory"
   [& parts]
@@ -65,4 +71,6 @@
 (def *site-config (delay (load-config)))
 
 (defn asciidoc-file-name? [file]
-  (str/ends-with? (.getName file) ".adoc"))
+  (-> file
+      .getName
+      (str/ends-with? ".adoc")))

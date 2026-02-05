@@ -6,8 +6,8 @@
 
 ((requiring-resolve 'hashp.install/install!))
 
-(defn html-template-head [{:keys [additional-header-content] :as site-config}
-                          {:keys [description additional-head] :as page-meta}]
+(defn html-template-head [{:keys [description additional-head] :as page-meta}
+                          & {:keys [additional-header-content] :as site-config}]
   (let [merged-data (merge site-config page-meta)
         raw-title (raw (render (:head-title site-config) merged-data))
         more-raw-header (->> (concat additional-head
@@ -15,10 +15,10 @@
                              (map raw))]
     (apply layout/html-template-head-layout raw-title description more-raw-header)))
 
-(defn html-template-body [{:keys [site-name navbar-sections]} {:keys [content]}]
+(defn html-template-body [{:keys [content]} & {:keys [site-name navbar-sections]}]
   (layout/html-template-body-layout (raw site-name) navbar-sections content))
 
-(defn- html-template-foot [site-config]
+(defn- html-template-foot [& {:as site-config}]
   (let [{:keys [contact-email links site-about
                 footer-about-title
                 footer-links-title
@@ -37,10 +37,10 @@
 
 (defn html-template
   "Generate complete HTML page with Bootstrap"
-  [site-config page-meta]
+  [page-meta & {:as site-config}]
   (layout/html-template-layout
-    (html-template-head site-config page-meta)
-    (html-template-body site-config page-meta)
+    (html-template-head page-meta site-config)
+    (html-template-body page-meta site-config)
     (html-template-foot site-config)))
 
 (def tag-url #(str "/blog/tags/" (slugify %) ".html"))
@@ -52,29 +52,30 @@
 (defn index-entry-for-post [{:keys [slug] :as _post} {:keys [title date author description tags] :as _meta}]
   (layout/index-entry-for-post-layout (blog-url slug) title date author description (map tag-anchor tags)))
 
-(defn index-content [{:keys [site-lead site-about index-welcome-template about-card-title lead-article] :as site-config} posts]
-  (let [rendered-posts (map #(index-entry-for-post % (:page-meta %))
+(defn index-content [posts & {:as site-config}]
+  (let [{:keys [site-lead site-about index-welcome-template about-card-title lead-article]} site-config
+        rendered-posts (map #(index-entry-for-post % (:page-meta %))
                             (reverse (sort-by (comp :date :page-meta) posts)))
-        about-card (when site-about {:text (raw site-about)
-                                     :title (raw about-card-title)
+        about-card (when site-about {:text         (raw site-about)
+                                     :title        (raw about-card-title)
                                      :lead-article (raw lead-article)})]
     (layout/index-content-layout (raw (render index-welcome-template site-config)) (raw site-lead) rendered-posts about-card)))
 
-(defn index-layout [{:keys [site-description index-title-template] :as site-config} posts]
+(defn index-layout [posts & {:keys [site-description index-title-template] :as site-config}]
   (html-template
-    site-config
     {:title       (raw (render index-title-template site-config))
      :description (raw site-description)
      :is-index?   true
-     :content     (index-content site-config posts)}))
+     :content     (index-content posts site-config)}
+    site-config))
 
-(defn site-page-layout [site-config {:keys [title description] :as page-meta} rendered-html]
+(defn site-page-layout [{:keys [title description] :as page-meta} rendered-html & {:as site-config}]
   (html-template
-    site-config
     {:title       title
      :description description
      :page-meta   page-meta
-     :content     (layout/site-page-content-layout title (raw rendered-html))}))
+     :content     (layout/site-page-content-layout title (raw rendered-html))}
+    site-config))
 
 (defn tags-block [tags & {:as options}]
   (when tags (layout/tags-block-layout (map tag-anchor tags) options)))
@@ -93,31 +94,30 @@
                   (raw rendered-html)
                   (map raw post-article-content))]
     (html-template
-      site-config
       {:title           title
        :description     description
        :page-meta       page-meta
        :additional-head (conj (map #(raw (render % merged-data)) post-additional-header-content-templates)
                               additional-css)
-       :content         content})))
+       :content         content}
+      site-config)))
 
 (defn tag-hiccup-for-post [{:keys [page-meta file]}]
   (let [{:keys [title description tags]} page-meta]
     (layout/tagged-post-index-entry-layout (blog-url file) title (blog-meta-block page-meta) description (tags-block tags))))
 
-(defn tag-index-layout [site-config tag sorted-posts]
+(defn tag-index-layout [tag sorted-posts & {:as site-config}]
   (let [n-tag-posts (count sorted-posts)
         rendered-posts (map tag-hiccup-for-post sorted-posts)
         content (layout/tag-index-content-layout n-tag-posts tag rendered-posts)]
     (html-template
-      site-config
       {:title       (str "Posts tagged: " tag)
        :description (list "All blog posts tagged with " [:q tag] "")
-       :content     content})))
+       :content     content}
+      site-config)))
 
-(defn tag-index-html [config tag matching-posts]
+(defn tag-index-html [tag matching-posts & {:as config}]
   (let [sorted-posts (->> matching-posts
                           (sort-by #(get-in % [:page-meta :date]))
                           reverse)]
-    {:html        (tag-index-layout config tag sorted-posts)
-     :n-tag-posts (count sorted-posts)}))
+    (tag-index-layout tag sorted-posts config)))

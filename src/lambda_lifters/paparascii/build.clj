@@ -1,7 +1,7 @@
 (ns lambda-lifters.paparascii.build
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [lambda-lifters.paparascii.adoc :as adoc]
+            [lambda-lifters.paparascii.asciidoc.execution :as adoc]
             [lambda-lifters.paparascii.file-system :as file-system]
             [lambda-lifters.paparascii.prism-js-highlighter :as highlighter]
             [lambda-lifters.paparascii.site :as site]
@@ -9,15 +9,18 @@
             [lambda-lifters.paparascii.util :as u]
             [selmer.parser :as selmer]))
 
-(defn site-page-html [content file]
+(defn site-page-html-entry [file]
   (let [site-config @site/*site-config
-        content (selmer/render content site-config)
+        content (-> file
+                    slurp
+                    (selmer/render site-config))
+        content-html (adoc/asciidoc-to-html content file site-config)
         header (adoc/parse-asciidoc-header content file site-config)
-        content-html (adoc/asciidoc-to-html content file site-config)]
-    {:slug         (u/slugify-file file)
-     :header       header
-     :html         (layout/site-page-layout site-config header content-html)
-     :content-html content-html}))
+        slug (u/slugify-file file)]
+    [slug {:slug         slug
+           :header       header
+           :html         (layout/site-page-layout header content-html site-config)
+           :content-html content-html}]))
 
 (defn process-site-pages
   "Process all pages in the site/ directory
@@ -25,15 +28,12 @@
   Note that lead-article is special, in that it is rendered (if present) in the lead section of the page.
   It's not handled specially here, but this is where it comes into the system."
   [parallel?]
-  (let [site-dir (site/site-file "site")]
-    (when (.exists site-dir)
-      (log/info (str "Processing site pages... parallel?=" parallel?))
-      (let [ascii-doc-files (filter site/asciidoc-file-name? (.listFiles site-dir))]
-        (into {}
-              (comp
-                (map #(site-page-html (slurp %) %))
-                (map (juxt #(-> % :slug keyword) identity)))
-              ascii-doc-files)))))
+  (when-let [site-dir (site/existent-site-file "site")]
+    (log/info (str "Processing site pages... parallel?=" parallel?))
+    (->> site-dir
+         .listFiles
+         (filter site/asciidoc-file-name?)
+         (into {} (map site-page-html-entry)))))
 
 (defn render-blog-post
   "Process a single blog post file"
@@ -62,24 +62,23 @@
                  (mapcat #(get-in % [:page-meta :tags]))
                  distinct
                  (filter some?))]
-    (let [matching-posts (filter #(some #{tag} (get-in % [:page-meta :tags])) posts)
-          {:keys [html n-tag-posts]} (layout/tag-index-html @site/*site-config tag matching-posts)]
-      (log/info "generated tag index " tag "(" n-tag-posts "posts)")
-      {:slug (u/slugify tag), :html html})))
+    (let [matching-posts (filter #(some #{tag} (get-in % [:page-meta :tags])) posts)]
+      (log/info "generated tag index " tag "(" (count matching-posts) "posts)")
+      {:slug (u/slugify tag)
+       :html (layout/tag-index-html tag matching-posts @site/*site-config)})))
 
 (defn generate-index
   "Generate the index page with all blog posts.
   This is also the home page... so might include a lead document"
-  [posts & {:keys [lead-doc] :as additional-lead-config}]
+  [posts & {:as additional-lead-config}]
   (log/info "Generating index.html")
-  (layout/index-layout (merge additional-lead-config @site/*site-config) posts))
+  (layout/index-layout posts (merge additional-lead-config @site/*site-config)))
 
 (defn process-html-files [parallel?]
   (log/info "Processing blog posts...")
   (let [site-pages (process-site-pages parallel?)
         blog-posts (generate-blog-posts)
-        index (generate-index blog-posts
-                              :lead-article (-> site-pages :lead-article :content-html))
+        index (generate-index blog-posts :lead-article (-> site-pages :lead-article :content-html))
         tag-indices (generate-tag-indices blog-posts)]
     (doall (map file-system/write-blog-post! blog-posts))
     (doall (map file-system/write-site-page! (dissoc site-pages :lead-article)))
@@ -94,8 +93,7 @@
   ;; Process site pages (about, contact, etc.)
   (log/info "Processing site pages")
   (let [report (process-html-files parallel?)]
-    (log/info "
-        Generated " (:posts-processed report) " blog posts
+    (log/info "Generated" (:posts-processed report) "blog posts
         Website ready in TARGET/public_html/
         To deploy:
           1. Copy TARGET/public_html/* to your web server
@@ -104,7 +102,7 @@
           clojure -Tpaparascii serve")))
 
 (comment
-  ; Example REPL session if you need to debug a thing
+  ;; Example REPL session if you need to debug a thing
   (System/setProperty "SITE_DIR" "../timb.net-site")
   (System/getProperty "SITE_DIR")
   (swap! site/*site-dir site/resolve-site-dir)

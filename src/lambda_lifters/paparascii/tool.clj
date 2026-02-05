@@ -50,7 +50,6 @@
   (println "paparascii REPL")
   (println "Available: (build) (serve) (clean) (init) (new-post) (list-posts)")
   (println "           (paparascii-reload) - reload source for development")
-  (println "")
   (in-ns 'user)
   (refer 'lambda-lifters.paparascii.tool)
   (main/repl))

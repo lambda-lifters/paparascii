@@ -1,6 +1,6 @@
 (ns lambda-lifters.paparascii.adoc-test
   (:require [clojure.test :refer [deftest is testing]]
-            [lambda-lifters.paparascii.adoc :as adoc]
+            [lambda-lifters.paparascii.asciidoc.execution :as adoc]
             [clojure.string :as str]))
 
 ;; NOTE: We avoid testing specific HTML output/styling (too brittle).

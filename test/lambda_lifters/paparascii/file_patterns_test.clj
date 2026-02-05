@@ -4,50 +4,50 @@
 
 (deftest test-matches-pattern-extensions
   (testing "Pattern matching with file extensions"
-    (is (fp/matches-pattern? "script.sh" "*.sh")
+    (is (fp/matches-glob? "script.sh" "*.sh")
         "Should match .sh extension")
-    (is (fp/matches-pattern? "test.cgi" "*.cgi")
+    (is (fp/matches-glob? "test.cgi" "*.cgi")
         "Should match .cgi extension")
-    (is (fp/matches-pattern? "program.bb" "*.bb")
+    (is (fp/matches-glob? "program.bb" "*.bb")
         "Should match .bb extension")
-    (is (not (fp/matches-pattern? "script.py" "*.sh"))
+    (is (not (fp/matches-glob? "script.py" "*.sh"))
         "Should not match wrong extension")
-    (is (not (fp/matches-pattern? "test.cgi" "*.sh"))
+    (is (not (fp/matches-glob? "test.cgi" "*.sh"))
         "Should not match different extension")))
 
 (deftest test-matches-pattern-exact-names
   (testing "Pattern matching with exact filenames"
-    (is (fp/matches-pattern? "my-script" "my-script")
+    (is (fp/matches-glob? "my-script" "my-script")
         "Should match exact filename")
-    (is (fp/matches-pattern? "deploy" "deploy")
+    (is (fp/matches-glob? "deploy" "deploy")
         "Should match exact filename without extension")
-    (is (not (fp/matches-pattern? "my-script" "other-script"))
+    (is (not (fp/matches-glob? "my-script" "other-script"))
         "Should not match different filename")
-    (is (not (fp/matches-pattern? "my-script.sh" "my-script"))
+    (is (not (fp/matches-glob? "my-script.sh" "my-script"))
         "Should not match if extension added")))
 
 (deftest test-matches-pattern-wildcard
   (testing "Pattern matching with wildcard"
-    (is (fp/matches-pattern? "anything" "*")
+    (is (fp/matches-glob? "anything" "*")
         "Wildcard should match any filename")
-    (is (fp/matches-pattern? "script.sh" "*")
+    (is (fp/matches-glob? "script.sh" "*")
         "Wildcard should match files with extensions")
-    (is (fp/matches-pattern? "no-extension" "*")
+    (is (fp/matches-glob? "no-extension" "*")
         "Wildcard should match files without extensions")))
 
 (deftest test-matches-any-pattern
   (testing "Matching against multiple patterns"
-    (is (fp/matches-any-pattern? "script.sh" ["*.sh" "*.cgi" "*.bb"])
+    (is (fp/matches-any-glob? "script.sh" ["*.sh" "*.cgi" "*.bb"])
         "Should match first pattern in list")
-    (is (fp/matches-any-pattern? "test.cgi" ["*.sh" "*.cgi" "*.bb"])
+    (is (fp/matches-any-glob? "test.cgi" ["*.sh" "*.cgi" "*.bb"])
         "Should match middle pattern in list")
-    (is (fp/matches-any-pattern? "program.bb" ["*.sh" "*.cgi" "*.bb"])
+    (is (fp/matches-any-glob? "program.bb" ["*.sh" "*.cgi" "*.bb"])
         "Should match last pattern in list")
-    (is (not (fp/matches-any-pattern? "script.py" ["*.sh" "*.cgi" "*.bb"]))
+    (is (not (fp/matches-any-glob? "script.py" ["*.sh" "*.cgi" "*.bb"]))
         "Should not match if no patterns match")
-    (is (fp/matches-any-pattern? "deploy" ["deploy" "*.sh"])
+    (is (fp/matches-any-glob? "deploy" ["deploy" "*.sh"])
         "Should match exact name in pattern list")
-    (is (not (fp/matches-any-pattern? "test.py" []))
+    (is (not (fp/matches-any-glob? "test.py" []))
         "Empty pattern list should match nothing")))
 
 (deftest test-filename-from-path
@@ -66,54 +66,54 @@
 (deftest test-should-be-executable
   (testing "Determining if files should be executable"
     (let [patterns ["*.sh" "*.cgi" "*.bb" "deploy"]]
-      (is (fp/should-be-executable? "scripts/test.sh" patterns)
+      (is (fp/path-matches-any-glob? "scripts/test.sh" patterns)
           "Should allow .sh file")
-      (is (fp/should-be-executable? "cgi-bin/form.cgi" patterns)
+      (is (fp/path-matches-any-glob? "cgi-bin/form.cgi" patterns)
           "Should allow .cgi file")
-      (is (fp/should-be-executable? "scripts/runner.bb" patterns)
+      (is (fp/path-matches-any-glob? "scripts/runner.bb" patterns)
           "Should allow .bb file")
-      (is (fp/should-be-executable? "bin/deploy" patterns)
+      (is (fp/path-matches-any-glob? "bin/deploy" patterns)
           "Should allow exact match")
-      (is (not (fp/should-be-executable? "scripts/malicious.py" patterns))
+      (is (not (fp/path-matches-any-glob? "scripts/malicious.py" patterns))
           "Should reject non-matching extension")
-      (is (not (fp/should-be-executable? "scripts/hack.exe" patterns))
+      (is (not (fp/path-matches-any-glob? "scripts/hack.exe" patterns))
           "Should reject unlisted extension")
-      (is (not (fp/should-be-executable? "random-script" patterns))
+      (is (not (fp/path-matches-any-glob? "random-script" patterns))
           "Should reject non-matching name"))))
 
 (deftest test-should-be-executable-security
   (testing "Security: safe defaults for edge cases"
-    (is (not (fp/should-be-executable? "script.sh" nil))
+    (is (not (fp/path-matches-any-glob? "script.sh" nil))
         "Should reject when patterns is nil (secure by default)")
-    (is (not (fp/should-be-executable? "script.sh" []))
+    (is (not (fp/path-matches-any-glob? "script.sh" []))
         "Should reject when patterns is empty (secure by default)")
-    (is (not (fp/should-be-executable? "" ["*.sh"]))
+    (is (not (fp/path-matches-any-glob? "" ["*.sh"]))
         "Should handle empty filename gracefully")))
 
 (deftest test-should-be-executable-wildcard
   (testing "Wildcard pattern allows everything"
-    (is (fp/should-be-executable? "anything.xyz" ["*"])
+    (is (fp/path-matches-any-glob? "anything.xyz" ["*"])
         "Wildcard should allow any file")
-    (is (fp/should-be-executable? "no-extension" ["*"])
+    (is (fp/path-matches-any-glob? "no-extension" ["*"])
         "Wildcard should allow files without extension")
-    (is (fp/should-be-executable? "malicious.exe" ["*"])
+    (is (fp/path-matches-any-glob? "malicious.exe" ["*"])
         "Wildcard allows even dangerous extensions (use with caution!)")))
 
 (deftest test-default-site-config-patterns
   (testing "Default site configuration patterns from site-config-defaults.edn"
     (let [default-patterns ["*.cgi" "*.sh" "*.bb"]]
-      (is (fp/should-be-executable? "script.sh" default-patterns)
+      (is (fp/path-matches-any-glob? "script.sh" default-patterns)
           "Default should allow shell scripts")
-      (is (fp/should-be-executable? "form.cgi" default-patterns)
+      (is (fp/path-matches-any-glob? "form.cgi" default-patterns)
           "Default should allow CGI scripts")
-      (is (fp/should-be-executable? "runner.bb" default-patterns)
+      (is (fp/path-matches-any-glob? "runner.bb" default-patterns)
           "Default should allow Babashka scripts")
-      (is (not (fp/should-be-executable? "script.py" default-patterns))
+      (is (not (fp/path-matches-any-glob? "script.py" default-patterns))
           "Default should reject Python scripts")
-      (is (not (fp/should-be-executable? "script.pl" default-patterns))
+      (is (not (fp/path-matches-any-glob? "script.pl" default-patterns))
           "Default should reject Perl scripts")
-      (is (not (fp/should-be-executable? "program.rb" default-patterns))
+      (is (not (fp/path-matches-any-glob? "program.rb" default-patterns))
           "Default should reject Ruby scripts")
-      (is (not (fp/should-be-executable? "malware.exe" default-patterns))
+      (is (not (fp/path-matches-any-glob? "malware.exe" default-patterns))
           "Default should reject executables"))))
 

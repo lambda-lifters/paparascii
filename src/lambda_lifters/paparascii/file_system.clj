@@ -6,71 +6,87 @@
             [lambda-lifters.paparascii.clean :as clean]
             [lambda-lifters.paparascii.file-patterns :as file-patterns]
             [lambda-lifters.paparascii.site :as site])
-  (:import (java.io File IOException)))
+  (:import (java.io File IOException)
+           (java.nio.file Path)))
 
 (defn setup-target!
   "Create the TARGET directory structure"
   []
   (log/info "Setting up TARGET directory structure...")
-  (doseq [dir site/target-dirs]
-    (ll-io/ensure-directory (site/target-path dir))))
-
+  (dorun (->> site/target-dirs
+              (map site/target-path)
+              (map ll-io/ensure-directory))))
 
 (defn copy-resources!
   "Copy all static resources to TARGET/public_html"
   []
   (log/info "Copying static resources...")
-  (doseq [[src dst] site/resource-destinations]
-    (ll-io/copy-file (str @site/*site-dir "/resources/" src) (site/target-path dst)))
-
+  (doseq [[src dst] site/resource-destinations
+          :let [src-file (str @site/*site-dir "/resources/" src)
+                dst-file (site/target-path dst)]]
+    (ll-io/copy-file src-file dst-file))
   ;; Copy any other static assets if they exist
-  (doseq [file (filter (every-pred File/.isFile
-                                   (complement #((set (keys site/resource-destinations)) (File/.getName %))))
-                       (.listFiles (io/file @site/*site-dir "resources")))]
-    (ll-io/copy-file file (site/public-html-file (.getName file)))))
+  (dorun (->> "resources"
+              (io/file @site/*site-dir)
+              .listFiles
+              (filter File/.isFile)
+              (remove #((set (keys site/resource-destinations)) (File/.getName %)))
+              (map #(ll-io/copy-file % (site/public-html-file (.getName %)))))))
+
+(defn- make-path-executable!
+  "Make CGI scripts executable if they match configured patterns"
+  [p f]
+  (when (file-patterns/path-matches-any-glob? p (:cgi-bin-executable-patterns @site/*site-config))
+    (log/info "Making executable:" p)
+    (.setExecutable f true)))
+
+(defn- copy-file-to-subdirectory! [subdir is-cgi? target-dir file]
+  (let [relative-path (subs (.getPath file) (inc (count (.getPath subdir))))
+        target-file (io/file target-dir relative-path)]
+    (io/make-parents target-file)
+    (io/copy file target-file)
+    (when is-cgi? (make-path-executable! relative-path target-file))))
+
+(defn- copy-assets-from-subdir! [subdir]
+  (let [subdir-name (.getName subdir)
+        is-cgi? (= subdir-name "cgi-bin")
+        target-dir (io/file (site/public-html-path subdir-name))]
+    (log/info "Copying" (str subdir-name "/"))
+    (io/make-parents (io/file target-dir "dummy"))
+    (dorun (->> subdir
+                file-seq
+                (filter File/.isFile)
+                (map #(copy-file-to-subdirectory! subdir is-cgi? target-dir %))))))
 
 (defn copy-assets!
   "Copy all assets from assets/ to TARGET/public_html/"
   []
   (log/info "Copying assets...")
-  (let [assets-dir (site/site-file "assets")
-        site-config @site/*site-config
-        executable-patterns (:cgi-bin-executable-patterns site-config)]
-    (when (.exists assets-dir)
-      (doseq [subdir (filter File/.isDirectory (.listFiles assets-dir))]
-        (let [subdir-name (.getName subdir)
-              target-dir (io/file (site/public-html-path subdir-name))]
-          (log/info "copying" (str subdir-name "/"))
-          (io/make-parents (io/file target-dir "dummy"))
-          (doseq [file (filter File/.isFile (file-seq subdir))]
-            (let [relative-path (subs (.getPath file) (inc (count (.getPath subdir))))
-                  target-file (io/file target-dir relative-path)]
-              (io/make-parents target-file)
-              (io/copy file target-file)
-              ;; Make CGI scripts executable if they match configured patterns
-              (when (and (= subdir-name "cgi-bin")
-                         (file-patterns/should-be-executable? relative-path executable-patterns))
-                (log/info "  Making executable:" relative-path)
-                (.setExecutable target-file true)))))))))
+  (when-let [assets-dir (site/existent-site-file "assets")]
+    (dorun (->> assets-dir
+                .listFiles
+                (filter File/.isDirectory)
+                (map copy-assets-from-subdir!)))))
+
+(defn potential-bb-sources []
+  (let [home (System/getenv "HOME")]
+    ["/usr/local/bin/bb"
+     "/usr/bin/bb"
+     "/opt/homebrew/bin/bb"
+     (str home "/.nix-profile/bin/bb")
+     (str home "/bin/bb")]))
 
 (defn copy-babashka!
   "Copy the current Babashka executable to TARGET/bin/"
   []
   (log/info "Copying Babashka executable...")
-  (let [home (System/getenv "HOME")
-        bb-path (first (filter #(.exists (io/file %))
-                               ["/usr/local/bin/bb"
-                                "/usr/bin/bb"
-                                "/opt/homebrew/bin/bb"
-                                (str home "/.nix-profile/bin/bb")
-                                (str home "/bin/bb")]))]
-    (if bb-path
-      (do
-        (log/info "copy from" bb-path)
-        (io/make-parents (site/target-path "bin" "bb"))
-        (io/copy (io/file bb-path) (site/target-file "bin" "bb"))
-        (.setExecutable (site/target-file "bin" "bb") true))
-      (log/warn "⚠ Warning: Could not find Babashka executable to copy"))))
+  (if-let [bb-path (some #(.exists (io/file %)) (potential-bb-sources))]
+    (do
+      (log/info "copy from" bb-path)
+      (io/make-parents (site/target-path "bin" "bb"))
+      (io/copy (io/file bb-path) (site/target-file "bin" "bb"))
+      (.setExecutable (site/target-file "bin" "bb") true))
+    (log/warn "Warning: Could not find Babashka executable to copy")))
 
 (defn font-awesome-file-name-mapping [output-dir entry-name]
   (condp (fn [matcher nm] (matcher nm)) entry-name
@@ -131,3 +147,6 @@
     (log/info output-file-name)
     (io/make-parents output-file)
     (spit output-file html)))
+
+(defn transpose-file [^Path source make-dest-path ^File f]
+  (make-dest-path (.toFile (.relativize source (.toPath f)))))
