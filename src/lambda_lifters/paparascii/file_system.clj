@@ -80,7 +80,7 @@
   "Copy the current Babashka executable to TARGET/bin/"
   []
   (log/info "Copying Babashka executable...")
-  (if-let [bb-path (some #(.exists (io/file %)) (potential-bb-sources))]
+  (if-let [bb-path (some #(when (.exists (io/file %)) %) (potential-bb-sources))]
     (do
       (log/info "copy from" bb-path)
       (io/make-parents (site/target-path "bin" "bb"))

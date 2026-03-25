@@ -3,7 +3,9 @@
             [clojure.tools.logging :as log]
             [lambda-lifters.lambda-liftoff.io :as ll-io]
             [lambda-lifters.paparascii.file-system :as fs]
-            [lambda-lifters.paparascii.site :as site]))
+            [lambda-lifters.paparascii.site :as site])
+  (:import (java.io File)
+           (java.nio.file Path)))
 
 (def seed-directories ["blog"
                        "site"
@@ -39,9 +41,9 @@
     (when-let [template-site (ll-io/resource-path "template-site")]
       (let [transpose-template-to-site #(ll-io/copy-file % (fs/transpose-file template-site site/site-path %))]
         (dorun (->> template-site
-                    .toFile
+                    Path/.toFile
                     file-seq
-                    (filter .isFile)
+                    (filter File/.isFile)
                     (map transpose-template-to-site)))))
     (when-let [workflow-template (ll-io/resource-path "template-github-workflow-build-and-deploy.yml")]
       (log/info "Copy GitHub workflow")

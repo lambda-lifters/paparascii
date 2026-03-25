@@ -1,7 +1,6 @@
 (ns lambda-lifters.paparascii.list-posts
   (:require
     [lambda-lifters.paparascii.asciidoc.grammar :as g]
-    [lambda-lifters.paparascii.asciidoc.grammar as :g]
     [clojure.java.io :as io]
     [clojure.string :as str]))
 

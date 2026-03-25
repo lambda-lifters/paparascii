@@ -58,7 +58,7 @@
                             (reverse (sort-by (comp :date :page-meta) posts)))
         about-card (when site-about {:text         (raw site-about)
                                      :title        (raw about-card-title)
-                                     :lead-article (raw lead-article)})]
+                                     :lead-article (when-not (empty? lead-article) (raw lead-article))})]
     (layout/index-content-layout (raw (render index-welcome-template site-config)) (raw site-lead) rendered-posts about-card)))
 
 (defn index-layout [posts & {:keys [site-description index-title-template] :as site-config}]
