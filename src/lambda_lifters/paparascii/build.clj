@@ -77,7 +77,6 @@
 (defn process-html-files [parallel?]
   (log/info "Processing blog posts...")
   (let [site-pages (process-site-pages parallel?)
-        _ (prn (keys site-pages))
         blog-posts (generate-blog-posts)
         index (generate-index blog-posts :lead-article (-> site-pages :lead-article :content-html))
         tag-indices (generate-tag-indices blog-posts)]
