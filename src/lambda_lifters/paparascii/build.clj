@@ -17,10 +17,10 @@
         content-html (adoc/asciidoc-to-html content file site-config)
         header (adoc/parse-asciidoc-header content file site-config)
         slug (u/slugify-file file)]
-    [slug {:slug         slug
-           :header       header
-           :html         (layout/site-page-layout header content-html site-config)
-           :content-html content-html}]))
+    [(keyword slug) {:slug         slug
+                     :header       header
+                     :html         (layout/site-page-layout header content-html site-config)
+                     :content-html content-html}]))
 
 (defn process-site-pages
   "Process all pages in the site/ directory
@@ -77,6 +77,7 @@
 (defn process-html-files [parallel?]
   (log/info "Processing blog posts...")
   (let [site-pages (process-site-pages parallel?)
+        _ (prn (keys site-pages))
         blog-posts (generate-blog-posts)
         index (generate-index blog-posts :lead-article (-> site-pages :lead-article :content-html))
         tag-indices (generate-tag-indices blog-posts)]
