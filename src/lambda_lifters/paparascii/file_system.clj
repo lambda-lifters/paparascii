@@ -108,6 +108,13 @@
                              (class ioe) ":"
                              (ex-message ioe)))))
 
+(defn install-generated-assets!
+  "Installs assets that paparascii thinks it need to help support itself.
+  For now, just a blank stylesheet!"
+  []
+  (log/info "installing paparascii-generated.css")
+  (.createNewFile (io/file (site/target-path "css" "paparascii-generated.css"))))
+
 (defn build-file-system! []
   ;; Clean and setup TARGET
   (log/info "Setup from scratch")
@@ -118,6 +125,7 @@
   ;; Copy assets (css, js, img, cgi-bin)
   (copy-assets!)
   (install-standard-assets!)
+  (install-generated-assets!)
   ;; Copy Babashka executable (optional - could be useful for CGI scripts)
   (copy-babashka!))
 
