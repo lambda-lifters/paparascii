@@ -112,8 +112,9 @@
   "Installs assets that paparascii thinks it need to help support itself.
   For now, just a blank stylesheet!"
   []
-  (log/info "installing paparascii-generated.css")
-  (.createNewFile (io/file (site/target-path "css" "paparascii-generated.css"))))
+  (let [f (io/file (site/public-html-path "css" "paparascii-generated.css"))]
+    (log/info "installing paparascii-generated.css" f)
+    (.createNewFile f)))
 
 (defn build-file-system! []
   ;; Clean and setup TARGET
